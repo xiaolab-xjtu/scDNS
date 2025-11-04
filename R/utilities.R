@@ -364,6 +364,19 @@ getSubNetByNode <- function(Net,
 }
 
 
+#' theme_cowplot
+#'
+#' @param font_size
+#' @param font_family
+#' @param line_size
+#' @param rel_small
+#' @param rel_tiny
+#' @param rel_large
+#'
+#' @return
+#' @export
+#'
+#' @examples
 theme_cowplot_i <- function (font_size = 14, font_family = "", line_size = 0.5,
                              rel_small = 12/14, rel_tiny = 11/14, rel_large = 16/14)
 {
@@ -427,6 +440,15 @@ theme_cowplot_i <- function (font_size = 14, font_family = "", line_size = 0.5,
 }
 
 
+#' AddBox
+#' add box to ggplot
+#' @param size
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 AddBox <- function(size=1.1,...){
   Boxed <-  theme(axis.line = element_blank(),panel.background = element_rect(fill = "white", colour = NA),
                   panel.border = element_rect(fill = NA, colour = "black",size=size,...))
@@ -451,6 +473,23 @@ getCloseseData <- function(data,query,returnIndex=FALSE){
 }
 
 
+#' DensityPlotDF_withPoint
+#'
+#' @param x
+#' @param y
+#' @param colors
+#' @param ncolor
+#' @param pt.alpha
+#' @param fill.alpha
+#' @param pt.size
+#' @param pt.color
+#' @param fill.alpha.cut
+#' @param showAllpoint
+#'
+#' @return
+#' @export
+#'
+#' @examples
 DensityPlotDF_withPoint <- function(x,y,colors=c('green','yellow','red','darkred'),
          ncolor=20,pt.alpha=0.5,fill.alpha=0.5,pt.size=0.5,
          pt.color='grey10',fill.alpha.cut=0.15,showAllpoint=TRUE){
@@ -480,6 +519,17 @@ DensityPlotDF_withPoint <- function(x,y,colors=c('green','yellow','red','darkred
 
 
 }
+#' NoAxes2
+#' NoAxes for ggplot
+#' @param ...
+#' @param keep.axis.text
+#' @param keep.axis.title
+#' @param keep.ticks
+#'
+#' @return
+#' @export
+#'
+#' @examples
 NoAxes2 <- function (..., keep.axis.text = FALSE,keep.axis.title = FALSE,  keep.ticks = FALSE) {
   blank <- element_blank()
   no.axes.theme <- theme(axis.line.x = blank, axis.line.y = blank,
@@ -517,12 +567,12 @@ fit_poly <- function(x,y,degree = 1, raw = FALSE,...){
     # geom_boxplot(data = InputData,mapping = aes(x_ds,y))+
     geom_line(data = Linedata,mapping = aes(x,y),size=1.5,color='grey80')+
     geom_point(data = Linedata,mapping = aes(x,y_m),size=2,color='green',alpha=1)+
-    cowplot::theme_cowplot()+AddBox()+ggtitle('y ~ x')+
+    theme_cowplot_i()+AddBox()+ggtitle('y ~ x')+
     xlab('x')+ylab('y') # Size ~ mean
   return(list(predictP=modelx,p=p))
 }
 
-GeneInteraion <- function(scDNSobject,
+GeneInteraction <- function(scDNSobject,
          Nodes,
          EdgeID = NULL,
          subEdgeID = 1,fillColorData=NULL){
@@ -574,4 +624,57 @@ replace2 <- function(x,RawData,RepData){
   matchID=match(x,RawData);
   x[!is.na(matchID)]=RepData[matchID[!is.na(matchID)]];
   x
+}
+
+
+#' theme_pretty
+#'
+#' @param fontsize font size. def:10
+#' @param font Helvetica
+#'
+#' @return
+#' @export
+#'
+#' @examples
+theme_pretty <- function(fontsize = 10, font = "Helvetica"){
+  nl <- theme_bw(base_size = fontsize) + theme(panel.grid.major = element_blank(),
+                                               panel.grid.minor = element_blank(),
+                                               axis.text = element_text(colour = "black", family = font),
+                                               legend.key = element_blank(),
+                                               strip.background = element_rect(colour = "black",  fill = "white"))
+  return(nl)
+}
+
+#' theme_pretty_NoBox
+#'
+#'  theme_pretty with no box
+#'
+#' @param fontsize font size.def:10
+#' @param font Helvetica
+#'
+#' @return
+#' @export
+#'
+#' @examples
+theme_pretty_NoBox <- function (fontsize = 10, font = "Helvetica") {
+  nl <- theme_bw(base_size = fontsize) + theme(panel.grid.major = element_blank(),
+                                               panel.grid.minor = element_blank(),
+                                               axis.text = element_text(colour = "black", family = font),
+                                               legend.key = element_blank(),
+                                               strip.background = element_rect(colour = "black",  fill = "white"),
+                                               axis.line.x.top = element_blank(),
+                                               axis.line.y.right = element_blank(),
+                                               rect = element_blank(),
+                                               axis.line = element_line(color = "black", lineend = "square",linewidth = rel(0.5)))
+  return(nl)
+}
+
+copyRowColname <- function(pasteM,copyM){
+  rownames(pasteM) = rownames(copyM)
+  colnames(pasteM) = colnames(copyM)
+  pasteM
+}
+
+getAccByScore <- function(x){
+  rank(x,ties.method = 'random')/length(x)
 }

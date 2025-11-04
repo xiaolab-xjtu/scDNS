@@ -69,48 +69,6 @@ scContribution<-function(scDNSobject,
 
   NetInd_t = t(NetInd+(1:nrow(NetInd)-1)*ncol(Div.mat)) # index for multiple edge
   #
-
-
-  # C3Cell <- WhichCells_HC(iAT2_data,idents = '3',group.by = 'RNA_snn_res.0.5')
-  # Network_sub_CD9 = getSubNetByNode(Network_sub,Node = 'CD9')
-  # Network_sub_CD9 = Network_sub_CD9[Network_sub_CD9$Symbol.2%in%'CD9',]
-  # DensityPlot_raster(colSums2(Div.mat[Network_sub_CD9$id,]/rowSums2(Div.mat[Network_sub_CD9$id,])))
-  # Network_sub_CD9 = getSubNetByNode(Network_sub,Node = 'CD9')
-  # Network_sub_CD9 = Network_sub_CD9[Network_sub_CD9$Symbol.1%in%'CD9',]
-  # DensityPlot_raster(colSums2(Div.mat[Network_sub_CD9$id,]/rowSums2(Div.mat[Network_sub_CD9$id,])))
-  #
-  # CD9Sum <- colSums2(Div.mat[Network_sub_CD9$id,]/rowSums2(Div.mat[Network_sub_CD9$id,]))
-  #
-  # SourceID = ExpData1_20[Network_sub_CD9[,1],C3Cell] # the id of source or target nodes
-  # TargetID = ExpData1_20[Network_sub_CD9[,2],C3Cell]
-  #
-  # NetInd = sub2ind(SourceID,TargetID,nrow = nx,ncol = nx) # index in the grid net
-  # hist(CD9Sum[NetInd])
-
-  # Div
-  # Div.mat_t = ZscoreAD(Div.mat_t,
-  #                       sdModel = NEAModel$ad.dropModel$AdModelList_2$fitsd.Div.fc$predictP,
-  #                       meanModel = NEAModel$ad.dropModel$AdModelList_2$fitMean.Div.fc$predictP,
-  #                      Network_sub$npoint_log)
-  # Div.mat_t[Div.mat_t<0]=0
-  # # min(Div.mat_t)
-  # # Div.mat_t = abs(Div.mat_t)
-  # Div.mat_t = Div.mat_t/abs(Network_sub$Div)
-  # Div.mat_t = Div.mat_t*Network_sub$Div.chiSquare.LR
-  #
-  # Network_sub$LR = pmin(Network_sub$LR_taret,Network_sub$LR_source)
-  #
-  # zs1 = sapply(1:nrow(Div.mat_t),  function(x)cal_Zscore_Pvalue(RawScore = Div.mat_t,
-  #                                                         Dsize = Network_sub$LR,
-  #                                                         ParmetersInput = NEAModel$ZscoreFit.Plus$ParmetersInput)$Zscores)
-  # Dsize <- matrix(Network_sub$LR,ncol = ncol(Div.mat_t),nrow = nrow(Div.mat_t))
-  #
-  # zs1 = (RawScore- predict(NEAModel$ZscoreFit.Plus$ParmetersInput$Meanfit,data.frame(MeaS = Dsize)))/
-  #   predict(NEAModel$ZscoreFit.Plus$ParmetersInput$Stdfit,data.frame(MeaS = Dsize))
-  #
-  # zs1[zs1<0] = 0 # Zscores
-  # Div.mat_t = zs1
-
   # Div
   Div.mat[ContextA_R$DS<ContextB_R$DS] = -Div.mat[ContextA_R$DS<ContextB_R$DS]
   Div.mat[,1] <- rowMeans2(Div.mat[,c(3,4,31,34,23,24)])
@@ -121,22 +79,6 @@ scContribution<-function(scDNSobject,
   Div.mat_t = matrix(Div.mat_t[NetInd_t],nrow = ncol(NetInd))
   Div.mat_t = t(Div.mat_t)  # row is network,col is cells,
   # Div.mat_t[Div.mat_t<0]=0
-
-
-  # GeneInteraion(DSP_scDNSob,Nodes = 'DSP',subEdgeID = 1,fillColorData = Div.mat_t[1,])+
-  #   scale_fill_gradientn(colours = rev(c("black", "red", "white", "purple")))|
-  #   scDNS::DensityPlot_raster(Div.mat[1,],colors =  rev(c("black", "red", "white","purple" )))
-
-  # Data2Color_Seq()
-  #
-  # Div.mat_t[,colnames(iAT2_data)%in%Mutcells] = -Div.mat_t[,colnames(iAT2_data)%in%Mutcells]
-  # colnames(Div.mat_t) <- colnames(iAT2_data)
-  # rownames(Div.mat_t) <- paste(Network_sub$Symbol.1,Network_sub$Symbol.2,sep = '-')
-  # PPIname <- paste(Network_sub$Symbol.1,Network_sub$Symbol.2,sep = '-')
-  # PPIscDNS <- CreateAssayObject(data = Div.mat_t)
-  # iAT2_data[['PPIscDNS']] <- PPIscDNS
-  # #
-  # FeaturePlot(iAT2_data,features = PPIname)&scale_color_gradientn(colours =  c('darkred','white','darkblue'))&shortAxixSeurat()
   #
 
   # Div.mat_t = Div.mat_t/rowSums2(cDiv.mat_t_d2)
@@ -149,9 +91,6 @@ scContribution<-function(scDNSobject,
   cDiv.mat_t_d1 = matrix(cDiv.mat_t_d1[NetInd_t],nrow = ncol(NetInd))
   cDiv.mat_t_d1 = t(cDiv.mat_t_d1)
 
-  # cDiv.mat_t_d1[cDiv.mat_t_d1<0]=0
-  # cDiv.mat_t_d1 = abs(cDiv.mat_t_d1)
-  # cDiv.mat_t_d1 = cDiv.mat_t_d1/rowSums2(cDiv.mat_t_d1)
   cDiv.mat_t_d1 = cDiv.mat_t_d1/Network_sub$cDiv_D1
   cDiv.mat_t_d1 = cDiv.mat_t_d1*Network_sub$cDiv_D1.chiSquare.LR
 
@@ -161,16 +100,7 @@ scContribution<-function(scDNSobject,
   cDiv.mat_t_d2 = t(cDiv.mat_D2)
   cDiv.mat_t_d2 = matrix(cDiv.mat_t_d2[NetInd_t],nrow = ncol(NetInd))
   cDiv.mat_t_d2 = t(cDiv.mat_t_d2)
-  # cDiv.mat_t_d2 = toFC(cDiv.mat_t_d2*pesudoGridNum,
-  #                      cova = Network_sub$npoint_log,
-  #                      meanFit = NEAModel$ad.dropModel$AdModelList_1$fitMean.cDiv.r)
-  # cDiv.mat_t_d2 = ZscoreAD(cDiv.mat_t_d2,
-  #                      sdModel = NEAModel$ad.dropModel$AdModelList_2$fitsd.cDiv.fc$predictP,
-  #                      meanModel = NEAModel$ad.dropModel$AdModelList_2$fitMean.cDiv.fc$predictP,
-  #                      Network_sub$npoint_log)
-  # cDiv.mat_t_d2[cDiv.mat_t_d2<0]=0
-  # cDiv.mat_t_d2 = abs(cDiv.mat_t_d2)
-  # cDiv.mat_t_d2 = cDiv.mat_t_d2/rowSums2(cDiv.mat_t_d2)
+
   cDiv.mat_t_d2 = cDiv.mat_t_d2/Network_sub$cDiv_D2
   cDiv.mat_t_d2 = cDiv.mat_t_d2*Network_sub$cDiv_D2.chiSquare.LR
 
@@ -200,28 +130,11 @@ scContribution<-function(scDNSobject,
   ScaleplusRS = plusRS/MatrixGenerics::rowSums2(abs(plusRS)) # Probabilizing
   ScaleplusRS = ScaleplusRS*Zscores[sigGene,]$Zscores.Plus
   ScaleplusRS # A matrix where rows represent genes,
-  # columns represent cells and
-  # values represent the contribution of the cell to the functional perturbation of the gene.
-  #
-  # zs1 = NEAModel$ZscoreFit.Plus$cal_Zscore_Pvalue(ScaleplusRS[1,]*400*Zscores[sigGene[1],]$Zscores.Plus,
-  #                                                     Dsize = Zscores[sigGene[1],]$Zscores.Plus,
-  #                                                     ParmetersInput = NEAModel$ZscoreFit.Plus$ParmetersInput)
-
-
 
 }
 
 
-JSD_batch_matrix_rawMt <- function(Ctl,Pert,base=exp(1)){
-  Ctl = Ctl+1e-200
-  Pert = Pert+1e-200
-  Ctl = Ctl/base::rowSums(Ctl)
-  Pert = Pert/base::rowSums(Pert)
-  M <- (Pert + Ctl) / 2
 
-  jsd_mt <- (Ctl * log(Ctl / M,base = base)+Pert * log(Pert / M,base = base))/2
-  jsd_mt
-}
 
 
 
@@ -231,7 +144,7 @@ JSD_batch_matrix_rawMt <- function(Ctl,Pert,base=exp(1)){
 #' @param muStart
 #'
 #' @return
-#' @export
+#' @keywords internal
 #'
 #' @examples
 likelihoodFromMixEM_3dToResult_constrMean <- function(x,muStart=c(mean(x[x<0]),0,mean(x[x>0])),plot=TRUE){
@@ -869,15 +782,9 @@ getDiv <- function(scDNSob,
   uniCase <- scDNSob@uniCase
   GroupLabel <- scDNSob@GroupLabel
   nx = scDNSob@Div.Parameters$n.coarse
-  # Network = scDNSob@Network
-  # Network$id = 1:nrow(scDNSob@Network)
-  # Network_sub = Network[EdgeID,]# getSubNetByNode(Network, sigGene)
+
   if(is.null(Exp20)){
     Exp20 <- scDNSob@data[rownames(scDNSob@data)%in%unlist(Network_sub[,1:2])%>%unique(),]
-    # ExpData <- ExpData[unlist(Network_sub[, 1:2]) %>% unique(),  ]
-    # ExpData1_20 <- mappingMinMaxRow(ExpData, minD = 1, maxD = scDNSob@Div.Parameters$n.coarse,
-    #                                 rmZero = scDNSob@Div.Parameters$exclude.zero)
-    # ExpData1_20 <- round(ExpData1_20, 0)
     Exp20 <- (Exp20 - rowMins(Exp20))/(rowMaxs(Exp20) - rowMins(Exp20)) * (scDNSob@Div.Parameters$n.coarse - 1) + 1
     Exp20 <- round(Exp20,digits = 0)
   }
@@ -886,24 +793,10 @@ getDiv <- function(scDNSob,
   SourceID = Exp20[Network_sub[, 1], ,drop=F]
   TargetID = Exp20[Network_sub[, 2], ,drop=F]
   filteredNetid = Network_sub$id
-  # if(ExpendDen){
-  #   ContextA_R <- getConditionalDenstiy(DS = ExpendDensityBycopyMaxNeiber(scDNSob@JDensity_A[filteredNetid,
-  #                                                                                            , drop = F]))
-  #   ContextB_R <- getConditionalDenstiy(DS = ExpendDensityBycopyMaxNeiber(scDNSob@JDensity_B[filteredNetid,
-  #                                                                                            , drop = F]))
-  # }else{
-  #   ContextA_R <- getConditionalDenstiy(DS = scDNSob@JDensity_A[filteredNetid,
-  #                                                                                            , drop = F])
-  #   ContextB_R <- getConditionalDenstiy(DS =scDNSob@JDensity_B[filteredNetid,
-  #                                                                                            , drop = F])
-  # }
   ContextA_R <- getConditionalDenstiy(DS = scDNSob@JDensity_A[filteredNetid,
                                                               , drop = F])
   ContextB_R <- getConditionalDenstiy(DS =scDNSob@JDensity_B[filteredNetid,
                                                              , drop = F])
-  # Div.mat = JSD_batch_matrix_rawMt(Ctl = ContextA_R$DS*sqrt(as.vector(matrix(1:20,nrow = 20,ncol = 20)*t(matrix(1:20,nrow = 20,ncol = 20)))),
-  #                                  Pert = ContextB_R$DS*sqrt(as.vector(matrix(1:20,nrow = 20,ncol = 20)*t(matrix(1:20,nrow = 20,ncol = 20))))
-  # Div_weight = sqrt(as.vector(matrix(1:20,nrow = 20,ncol = 20)*t(matrix(1:20,nrow = 20,ncol = 20))))
   if(rb){
     Div.mat = JSD_batch_matrix_rawMt_robust( ContextA_R$DS,
                                              ContextB_R$DS)
@@ -914,8 +807,6 @@ getDiv <- function(scDNSob,
     Div.mat = t(t(Div.mat)*Div_weight)
   }
 
-  # Div.mat = JSD_batch_matrix_rawMt(Ctl = ContextA_R$DS,
-  #                                  Pert = ContextB_R$DS)
 
   Div.mat <- abs(Div.mat)
   # Div.mat <- Div.mat
@@ -949,8 +840,7 @@ getDiv <- function(scDNSob,
                                                       ContextB_R$DS]
 
   Div.mat = t(Div.mat)
-  # Div.mat_t = matrix(Div.mat_t[NetInd_t], nrow = ncol(NetInd))
-  # Div.mat_t = t(Div.mat_t)
+
   #
   #
   cDiv.mat_D1 <- cDiv.mat_D1/rowSums2(cDiv.mat_D1)
@@ -958,8 +848,6 @@ getDiv <- function(scDNSob,
                                                                     ContextB_R$cDS_1]
 
   cDiv.mat_D1 = t(cDiv.mat_D1)
-  # cDiv.mat_t_d1 = matrix(cDiv.mat_t_d1[NetInd_t], nrow = ncol(NetInd))
-  # cDiv.mat_t_d1 = t(cDiv.mat_t_d1)
 
   #
   cDiv.mat_D2 <- cDiv.mat_D2/rowSums2(cDiv.mat_D2)
@@ -967,8 +855,7 @@ getDiv <- function(scDNSob,
                                                                     ContextB_R$cDS_2]
 
   cDiv.mat_D2 = t(cDiv.mat_D2)
-  # cDiv.mat_t_d2 = matrix(cDiv.mat_t_d2[NetInd_t], nrow = ncol(NetInd))
-  # cDiv.mat_t_d2 = t(cDiv.mat_t_d2)
+
 
   return(list(Div.mat=Div.mat,cDiv.mat_D1=cDiv.mat_D1,cDiv.mat_D2=cDiv.mat_D2,Network_sub=Network_sub,NetInd_t=NetInd_t))
 }

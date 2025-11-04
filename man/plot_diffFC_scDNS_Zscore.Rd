@@ -2,7 +2,7 @@
 % Please edit documentation in R/Visualization.R
 \name{plot_diffFC_scDNS_Zscore}
 \alias{plot_diffFC_scDNS_Zscore}
-\title{plot_diffFC_scDNS_Zscore}
+\title{Volcano Plot of Log2 Fold-Change versus scDNS Z-score}
 \usage{
 plot_diffFC_scDNS_Zscore(
   Zscores,

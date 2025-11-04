@@ -2,7 +2,7 @@
 % Please edit documentation in R/scDNSmain.R
 \name{scDNS_1_CalDivs}
 \alias{scDNS_1_CalDivs}
-\title{scDNS_1_CalDivs}
+\title{Network with divergence scores for each edge}
 \usage{
 scDNS_1_CalDivs(
   scDNSobject,
@@ -24,7 +24,7 @@ scDNS_1_CalDivs(
 )
 }
 \arguments{
-\item{scDNSobject}{scDNSobject}
+\item{scDNSobject}{scDNS object}
 
 \item{k}{a numerical value represents the kth (def: 10) nearest neighbor point}
 
@@ -58,5 +58,5 @@ scDNS_1_CalDivs(
 scDNSobject
 }
 \description{
-scDNS_1_CalDivs
+Computes Jensen-Shannon or Kullback-Leibler divergence between conditional density distributions of network edges (gene pairs) in two biological contexts.
 }

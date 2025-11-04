@@ -1,16 +1,19 @@
 #' scDNS_2_creatNEAModel_v2
 #'
-#' @param scDNSobject scDNS objcet
-#' @param n.dropGene
-#' @param n.randNet
-#' @param sdBias
+#' Creates a null model for network enrichment analysis by random sampling of genes and networks.
+#'
+#' @param scDNSobject scDNSobject
+#' @param n.dropGene Integer, number of cells sampled for model building (def:3000)
+#' @param n.randNet Integer, number of cells sampled for model building (def:20000)
+#' @param sdBias Numeric value, bias coefficient used to penalize low degree genes(>=1) (def:1.1)
 #' @param GroupLabel
+#' @param repTime
 #'
 #' @return
 #' @export
 #'
 #' @examples
-scDNS_2_creatNEAModel_v2 <- function (scDNSobject, n.dropGene = NULL, n.randNet = NULL,
+scDNS_2_creatNEAModel_v2 <- function (scDNSobject, n.dropGene = NULL, n.randNet = NULL,repTime=5,
                                       sdBias = NULL,GroupLabel=NULL)
 {
   if (!is.null(n.dropGene)) {
@@ -63,9 +66,10 @@ scDNS_2_creatNEAModel_v2 <- function (scDNSobject, n.dropGene = NULL, n.randNet 
   CandidateNet_samll$npoint_ds <-  CandidateNet_samll$npoint_log
   CandidateNet_samll$LR = pmin(Likelihood[CandidateNet_samll[,1]],
                                Likelihood[CandidateNet_samll[,2]])
-
-  # #
+  message("rand netowrk")
+  # # rand netowrk
   NEAModel_randNet <- creatNEAModel_test(ExpData = ExpData, CandidateNet_samll=CandidateNet_samll,
+                                         repTime = repTime,
                                          k = scDNSobject@Div.Parameters$k,
                                          GroupLabel = GroupLabel,
                                          n.grid = scDNSobject@Div.Parameters$n.grid, n.coarse = scDNSobject@Div.Parameters$n.coarse,
@@ -78,8 +82,10 @@ scDNS_2_creatNEAModel_v2 <- function (scDNSobject, n.dropGene = NULL, n.randNet 
                                          ds.method = scDNSobject@Div.Parameters$ds.method, h = scDNSobject@Div.Parameters$h,
                                          sdBias = scDNSobject@NEA.Parameters$sdBias, rb.jsd = scDNSobject@Div.Parameters$rb.jsd,
                                          parllelModel = scDNSobject@Div.Parameters$parllelModel)
-  # #
+  # shuffleLabel
+  message("shuffleLabel")
   NEAModel_shuffleLabel <- creatNEAModel_test( ExpData = ExpData, CandidateNet_samll=CandidateNet_samll,
+                                               repTime = repTime,
                                                k = scDNSobject@Div.Parameters$k,
                                                GroupLabel = sample(GroupLabel), ###########################❤
                                                n.grid = scDNSobject@Div.Parameters$n.grid, n.coarse = scDNSobject@Div.Parameters$n.coarse,
@@ -93,19 +99,20 @@ scDNS_2_creatNEAModel_v2 <- function (scDNSobject, n.dropGene = NULL, n.randNet 
                                                sdBias = scDNSobject@NEA.Parameters$sdBias, rb.jsd = scDNSobject@Div.Parameters$rb.jsd,
                                                parllelModel = scDNSobject@Div.Parameters$parllelModel)
 
-  message('shuffle_rows_by_group')
+  # shuffle distribution
+  message("shuffle distribution")
   shuffleData <- shuffle_rows_by_group(counts,data = ExpData,GroupLabel = GroupLabel)
-  message('tcrossprod')
+
   dropoutMatrix = Matrix::tcrossprod(shuffleData$counts != 0)
   dropoutMatrix_log = round(log10(dropoutMatrix + 1), 1)
   CandidateNet_samll$npoint_log = dropoutMatrix_log[sub2ind(match(CandidateNet_samll[,
                                                                                      1], rownames(dropoutMatrix_log)), match(CandidateNet_samll[,
                                                                                                                                                 2], rownames(dropoutMatrix_log)), nrow = nrow(dropoutMatrix_log),
                                                             ncol = ncol(dropoutMatrix_log))]
-  message('creatNEAModel_test')
+
   NEAModel_RandDistrubution <- creatNEAModel_test( ExpData = shuffleData$data,
                                                    CandidateNet_samll=CandidateNet_samll,
-
+                                                   repTime = repTime,
                                                    k = scDNSobject@Div.Parameters$k,
                                                    GroupLabel = GroupLabel,
                                                    n.grid = scDNSobject@Div.Parameters$n.grid, n.coarse = scDNSobject@Div.Parameters$n.coarse,
@@ -126,10 +133,10 @@ scDNS_2_creatNEAModel_v2 <- function (scDNSobject, n.dropGene = NULL, n.randNet 
 
 shuffle_rows_by_group <- function(counts, data, GroupLabel) {
   if (!all(dim(counts) == dim(data))) {
-    stop("counts 和 data 必须维度一致")
+    stop("The dimensions of counts and data must be identical.")
   }
   if (length(GroupLabel) != ncol(counts)) {
-    stop("GroupLabel 长度必须等于列数")
+    stop("The length of GroupLabel must match the number of columns.")
   }
 
   nr <- nrow(counts)
@@ -152,18 +159,18 @@ creatNEAModel_test <- function (ExpData = NULL, CandidateNet_samll=NULL,
                                 GroupLabel = NULL,
                                 n.grid = 60, n.coarse = 20, CoarseGrain = TRUE, loop.size = 3000,
                                 parallel.sz = 10, noiseSd = 0.01, verbose = TRUE, exclude.zero = FALSE,
-                                NoiseRemove = TRUE, divergence = "jsd", ds.method = "knn",
+                                NoiseRemove = TRUE, divergence = "jsd", ds.method = "knn",repTime=5,
                                 h = 3, sdBias = 1.1, rb.jsd = FALSE, parllelModel = c("foreach",
                                                                                       "bplapply")[1])
 {
-  RawKLD_R_samll = scDNS2::getKLD_cKLDnetwork(ExpData = ExpData, Network = CandidateNet_samll,
+  RawKLD_R_samll = getKLD_cKLDnetwork(ExpData = ExpData, Network = CandidateNet_samll,
                                               k = k, GroupLabel = GroupLabel, n.grid = n.grid, n.coarse = n.coarse,
                                               loop.size = nrow(CandidateNet_samll)/parallel.sz, parallel.sz = parallel.sz,
                                               verbose = verbose, exclude.zero = exclude.zero, NoiseRemove = NoiseRemove,
                                               CoarseGrain = CoarseGrain, returnCDS = FALSE, Div_weight = Div_weight,
                                               divergence = divergence, ds.method = ds.method, h = h,
                                               parllelModel = parllelModel, rb.jsd = rb.jsd)
-  NEAModel <- creatNEAModel_robustness(Network=RawKLD_R_samll$Network,repTime=5,sdBias = sdBias)
+  NEAModel <- creatNEAModel_robustness(Network=RawKLD_R_samll$Network,repTime=repTime,sdBias = sdBias)
   NEAModel
 }
 
@@ -174,7 +181,7 @@ creatNEAModel_robustness<- function(Network,repTime=5,sdBias=1.1){
 
   CandidateNet_samll = Network
 
-  # 计算dropout与得分的关系
+  # correlation between dropout and network divergence
   CadiateNet2 <- CandidateNet_samll
   CadiateNet2$id = 1:nrow(CadiateNet2)
   CadiateNet2 <- CadiateNet2[as.character(CadiateNet2$npoint_ds) %in%
@@ -184,8 +191,8 @@ creatNEAModel_robustness<- function(Network,repTime=5,sdBias=1.1){
   RawDistrbution.cDiv <- NULL
   for (i in unique(CadiateNet2$npoint_ds) %>% sort()) {
     idx = CadiateNet2$npoint_ds == i
-    RawDistrbution.Div <- c(RawDistrbution.Div, list(scDNS2::fit_selm_distrubution(CadiateNet2$Div[idx])))
-    RawDistrbution.cDiv <- c(RawDistrbution.cDiv, list(scDNS2::fit_selm_distrubution(c(CadiateNet2$cDiv_D1[idx],
+    RawDistrbution.Div <- c(RawDistrbution.Div, list(fit_selm_distrubution(CadiateNet2$Div[idx])))
+    RawDistrbution.cDiv <- c(RawDistrbution.cDiv, list(fit_selm_distrubution(c(CadiateNet2$cDiv_D1[idx],
                                                                                        CadiateNet2$cDiv_D2[idx]))))
   }
   names(RawDistrbution.Div) <- unique(CadiateNet2$npoint_ds) %>%
@@ -425,12 +432,12 @@ toChiSquareX <- function(rs, bias, DistrbutionList) {
   uniBias <- unique(bias)
   Num_Model <- names(DistrbutionList)
   for (i in 1:length(uniBias)) {
-    ind = scDNS2::getCloseseData(data = as.numeric(Num_Model),
+    ind <- getCloseseData(data = as.numeric(Num_Model),
                                  uniBias[i], returnIndex = T)
-    Pvalues[bias == uniBias[i]] = DistrbutionList[[ind]]$cal_Pvalue(rs[bias ==
+    Pvalues[bias == uniBias[i]]  <-  DistrbutionList[[ind]]$cal_Pvalue(rs[bias ==
                                                                          uniBias[i]], ParmetersInput = DistrbutionList[[ind]]$ParmetersInput)$Pvalues
   }
-  Pvalues[Pvalues == 0] = 9.99999999998465e-313
+  Pvalues[Pvalues == 0] <-  9.99999999998465e-313
   chiSquare = sqrt(-log10(Pvalues))
   data.frame(Pvalues = Pvalues, chiSquare = chiSquare)
 }
@@ -446,7 +453,7 @@ make_model <- function(a,b,c) {
   model
 }
 
-# 自定义 predict 方法
+#  predict
 predict.sd_mean_model <- function(object, newdata) {
   object$fsd_mean(newdata$x)
 }
@@ -515,11 +522,11 @@ getZscore_v2 <- function (EdgeScore, NEAModel, GeneLikelihood,EdgeDataSpecific=N
 {
   if ("data.frame" %in% class(EdgeScore)) {
     message("input is a datafrme")
-    Network = EdgeScore
+    Network <-  EdgeScore
   }
   else {
     message("input is a scNDS object")
-    Network = EdgeScore@Network
+    Network <- EdgeScore@Network
   }
   Network <- ad.NetRScore3(netScore = Network, NEAModel$ad.dropModel$AdModelList_1,
                            NEAModel$ad.dropModel$AdModelList_2)
@@ -537,46 +544,35 @@ getZscore_v2 <- function (EdgeScore, NEAModel, GeneLikelihood,EdgeDataSpecific=N
                               "cDiv_D2.chiSquare")] * as.numeric(LR)
   chiSquare.LR <- addLabel2Colnames(chiSquare.LR, ".LR")
   Network[, colnames(chiSquare.LR)] <- chiSquare.LR
-  GeneDegree = tapply(c(LR, LR), list(c(Network[, 1], Network[,
+  GeneDegree <- tapply(c(LR, LR), list(c(Network[, 1], Network[,
                                                               2])), function(x) sum(x/max(x)))
 
-  RawS.Div = getRawScore.Div(net = Network[, 1:3], Div = Network$Div.chiSquare.LR)
-  RawS.cDiv = getRawScore.cDiv(net = Network[, 1:3], cDiv_D1 = Network$cDiv_D1.chiSquare.LR,
+  RawS.Div <- getRawScore.Div(net = Network[, 1:3], Div = Network$Div.chiSquare.LR)
+  RawS.cDiv  <-  getRawScore.cDiv(net = Network[, 1:3], cDiv_D1 = Network$cDiv_D1.chiSquare.LR,
                                cDiv_D2 = Network$cDiv_D2.chiSquare.LR)
-  # RawS.OR = getRawScore.Or(net = Network[, 1:3], Div = Network$Div.chiSquare,
-  #                          cDiv_D1 = Network$cDiv_D1.chiSquare.LR, cDiv_D2 = Network$cDiv_D2.chiSquare.LR)
-  # RawS.Plus = getRawScore.Plus(net = Network[, 1:3], Div = Network$Div.chiSquare.LR,
-  #                              cDiv_D1 = Network$cDiv_D1.chiSquare.LR, cDiv_D2 = Network$cDiv_D2.chiSquare.LR)
-  # RawS.Mpl = getRawScore.Mpl(net = Network[, 1:3], Div = Network$Div.chiSquare.LR,
-  #                            cDiv_D1 = Network$cDiv_D1.chiSquare.LR, cDiv_D2 = Network$cDiv_D2.chiSquare.LR)
-  Zscores = cbind(RawS.Div[, c(1, 3)],
+
+  Zscores <- cbind(RawS.Div[, c(1, 3)],
                   addLabel2Colnames(RawS.Div[, 2, drop = F], label = ".Div"),
                   addLabel2Colnames(RawS.cDiv[, 2, drop = F], label = ".cDiv"))
-  Zscores$degree.LR = GeneDegree[Zscores$Gene]
-  ZS.Div = NEAModel$ZscoreFit.Div$cal_Zscore_Pvalue(RawScore = Zscores$RawScore.Div[1],
+  Zscores$degree.LR <- GeneDegree[Zscores$Gene]
+  ZS.Div <- NEAModel$ZscoreFit.Div$cal_Zscore_Pvalue(RawScore = Zscores$RawScore.Div[1],
                                                     Dsize = Zscores$degree.LR[1], ParmetersInput = NEAModel$ZscoreFit.Div$ParmetersInput)
-  ZS.cDiv = NEAModel$ZscoreFit.cDiv$cal_Zscore_Pvalue(Zscores$RawScore.cDiv,
+  ZS.cDiv <- NEAModel$ZscoreFit.cDiv$cal_Zscore_Pvalue(Zscores$RawScore.cDiv,
                                                       Dsize = Zscores$degree.LR, ParmetersInput = NEAModel$ZscoreFit.cDiv$ParmetersInput)
-  # ZS.OR = NEAModel$ZscoreFit.OR$cal_Zscore_Pvalue(Zscores$RawScore.OR,
-  #                                                 Dsize = Zscores$degree.LR, ParmetersInput = NEAModel$ZscoreFit.OR$ParmetersInput)
-  # ZS.Plus = NEAModel$ZscoreFit.Plus$cal_Zscore_Pvalue(Zscores$RawScore.Plus,
-  #                                                     Dsize = Zscores$degree.LR, ParmetersInput = NEAModel$ZscoreFit.Plus$ParmetersInput)
-  # ZS.Mpl = NEAModel$ZscoreFit.Mpl$cal_Zscore_Pvalue(Zscores$RawScore.Mpl,
-  #                                                   Dsize = Zscores$degree.LR, ParmetersInput = NEAModel$ZscoreFit.Mpl$ParmetersInput)
   ZS.ZsPlus <- NEAModel$ZscoreFit.ZsPlus$cal_Pvalue(ZS.Div[,
                                                            1] + ZS.cDiv[, 1], NEAModel$ZscoreFit.ZsPlus$ParmetersInput)
   colnames(ZS.ZsPlus) <- c("Zscores", "Pvalues")
-  Zscores = cbind(Zscores, addLabel2Colnames(ZS.Div, label = ".Div"),
+  Zscores  <- cbind(Zscores, addLabel2Colnames(ZS.Div, label = ".Div"),
                   addLabel2Colnames(ZS.cDiv, label = ".cDiv"),
                   addLabel2Colnames(ZS.ZsPlus, label = ".ZsPlus"))
-  RankData = apply(Zscores[, stringr::str_detect(colnames(Zscores),
+  RankData <- apply(Zscores[, stringr::str_detect(colnames(Zscores),
                                                  "^Zscores.")], 2, function(x) rank(-x, ties.method = "random"))
-  colnames(RankData) = stringr::str_replace(colnames(RankData),
+  colnames(RankData) <- stringr::str_replace(colnames(RankData),
                                             pattern = "^Zscores.", "Rank.")
   Acc = round((1 - (RankData - 1)/nrow(RankData)) * 100, 2)
-  colnames(Acc) = stringr::str_replace(colnames(Acc), pattern = "^Rank.",
+  colnames(Acc) <- stringr::str_replace(colnames(Acc), pattern = "^Rank.",
                                        "Acc.")
-  Zscores = cbind(Zscores, RankData, Acc)
+  Zscores <- cbind(Zscores, RankData, Acc)
   if ("data.frame" %in% class(EdgeScore)) {
     list(Zscores=Zscores,Network=Network)
   }  else {
@@ -586,7 +582,33 @@ getZscore_v2 <- function (EdgeScore, NEAModel, GeneLikelihood,EdgeDataSpecific=N
   }
 }
 
-scDNS_3_GeneZscore_v2 <- function(scDNSobject,reCreatNEA=FALSE,PositiveGene=NULL,repTime=1,testTime=5,FDRmethods='BY',corr_adjust = T)
+#' Compute gene-level Z-scores v2
+#'
+#' This function calculates gene-level Z-scores from a scDNS object using
+#' three types of null network models: random edge rewiring, label shuffling,
+#' and random distribution.
+#'
+#' @param scDNSobject A scDNS object containing the gene interaction network
+#' @param reCreatNEA Whether to re-generate NEA models with stochastic
+#' @param PositiveGene Optional character vector specifying a set of positive
+#' @param repTime Number of repetitions used when creating each NEA
+#' @param testTime Integer. Number of independent stochastic tests performed to
+#' identify the most robust seed with the best recovery accuracy of
+#' PositiveGene.
+#' @param FDRmethods Character. Multiple testing correction method for p-values,
+#' such as "BH", "BY", or "bonferroni".
+#' @param corr_adjust Whether to apply correlation adjustment when
+#' combining multiple Z-scores using the Stouffer method.
+#'
+#' @return A scDNS object with the following updated slots:
+#' - NEAModel$ZscoreList: List of Z-score results for all NEA models
+#' - Zscore: Data frame containing combined Z-scores, p-values, adjusted p-values, and accuracy metrics
+#' - Network: Updated network information used for computation
+#'
+#' @export
+#'
+#' @examples
+scDNS_3_GeneZscore_v2 <- function(scDNSobject,reCreatNEA=FALSE,PositiveGene=NULL,repTime=1,testTime=5,FDRmethods='BH',corr_adjust = T)
 {
   NEAModel <- scDNSobject@NEAModel
   if(reCreatNEA&!is.null(PositiveGene)){
@@ -641,7 +663,7 @@ scDNS_3_GeneZscore_v2 <- function(scDNSobject,reCreatNEA=FALSE,PositiveGene=NULL
 
     #
     Network_rand <- NEAModel$randNet$DegreeData
-    NEAModel_randNet <- creatNEAModel_robustness(Network=Network_rand,repTime=5)
+    NEAModel_randNet <- creatNEAModel_robustness(Network=Network_rand,repTime=repTime)
 
     NEAModel_temp <- list(randNet=NEAModel_randNet,shuffleLabel=NEAModel_shuffleLabel,RandDistrubution=NEAModel_RandDistrubution)
 
@@ -668,18 +690,18 @@ scDNS_3_GeneZscore_v2 <- function(scDNSobject,reCreatNEA=FALSE,PositiveGene=NULL
                    p_combine=p_combine)
     Zscore
   }else{
-    # NEAModel_RandDistrubution$ad.dropModel <- NEAModel_ShuffleLabel$ad.dropModel
+    #
     Res_randNet <- getZscore_v2(EdgeScore = scDNSobject@Network, NEAModel = NEAModel$randNet,
                                 GeneLikelihood = scDNSobject@GeneVariability)
-    # Res_randNet$Zscores[c('TP53','TERT','PDGFRA'),]
+    #
     Res_shuffleLabel <- getZscore_v2(EdgeScore = scDNSobject@Network, NEAModel = NEAModel$shuffleLabel,
                                      GeneLikelihood = scDNSobject@GeneVariability)
-    # Res_shuffleLabel$Zscores[c('TP53','TERT','PDGFRA'),]
-    # NEAModel$RandDistrubution$ad.dropModel <- NEAModel$shuffleLabel$ad.dropModel
+    #
+    #
     Res_RandDistrubution <- getZscore_v2(EdgeScore = scDNSobject@Network, NEAModel = NEAModel$RandDistrubution,
                                          GeneLikelihood = scDNSobject@GeneVariability)
 
-    # Res_RandDistrubution$Zscores[c('TP53','TERT','PDGFRA'),]
+    #
     Zs_data <- data.frame(randNet=Res_randNet$Zscores$Zscores.ZsPlus,
                           shuffleLabel=Res_shuffleLabel$Zscores$Zscores.ZsPlus,
                           RandDistrubution=Res_RandDistrubution$Zscores$Zscores.ZsPlus)
@@ -701,129 +723,19 @@ scDNS_3_GeneZscore_v2 <- function(scDNSobject,reCreatNEA=FALSE,PositiveGene=NULL
   scDNSobject
 }
 
-# combine_stouffer <- function(df,
-#                              robust_center = TRUE,
-#                              corr_adjust = TRUE,
-#                              FDRmethods = 'BH' ) {
-#   # library(matrixStats)
-#   robust_scale <- function(x) {
-#     med <- median(x)
-#     s <- mad(x) * 1.4826     # 将 mad 近似转为 sd
-#     if (s == 0) s <- sd(x)   # 兜底
-#     (x - med) / s
-#   }
-#   Z <- as.matrix(df)
-#   Z <- apply(Z, 2, robust_scale)
-#   # Z <- scale(Z)
-#   # 零分布估计: 只用中间部分
-#   meds <- numeric(ncol(Z))
-#   sds <- numeric(ncol(Z))
-#   for (j in seq_len(ncol(Z))) {
-#     mid_idx <- which(abs(Z[, j]) < 1.5 & abs(Z[, j]) > 0.5) # 中间部分
-#     if (length(mid_idx) < 30) mid_idx <- which(abs(Z[, j]) < 2) # 兜底
-#     meds[j] <- median(Z[mid_idx, j])
-#     sds[j] <- mad(Z[mid_idx, j]) * 1.4826
-#   }
-#   #
-#   # # for (j in seq_len(ncol(Z))) {
-#   # #   # mid_idx <- which(abs(Z[, j]) < 1.5 & abs(Z[, j]) > 0.5) # 中间部分
-#   # #   # if (length(mid_idx) < 30) mid_idx <- which(abs(Z[, j]) < 2) # 兜底
-#   # #   meds[j] <- median(Z[, j])
-#   # #   sds[j] <- mad(Z[, j]) * 1.4826
-#   # # }
-#   #
-#   # # 标准化
-#   Zstd <- sweep(Z, 2, meds, "-")
-#   Zstd <- sweep(Zstd, 2, sds, "/")
-#   # Zstd <- scale(Z)
-#   # 协方差矩阵
-#   if (corr_adjust) {
-#     Sigma <- cov(scale(Z))
-#   } else {
-#     Sigma <- diag(ncol(Zstd))
-#   }
-#
-#   w <- rep(1/ ncol(Zstd), ncol(Zstd))
-#   num <- as.numeric(Zstd %*% w)
-#   # hist(num)
-#   den <- sqrt( t(w) %*% Sigma %*% w )
-#   # den <- ( t(w) %*% Sigma %*% w )/ncol(Zstd)
-#   combined_z <- num / as.numeric(den)
-#
-#   p_comb <- 1 - pnorm(combined_z) # 单边
-#   p_comb[p_comb==0] <- dnorm(combined_z)[p_comb==0]
-#   print(sum(p.adjust(p_comb,'BH')<0.01))
-#   print(sum(p.adjust(p_comb,'BH')<0.05))
-#   print(sum(p.adjust(p_comb,'BH')<0.1))
-#   data.frame(df, combined_z, p_comb,p_adj=p.adjust(p_comb,FDRmethods))
-# }
 
-
-# load(file = '/home/rstudio/Projects/scDDG/Application/simulation/TP53_scDNSob2.RData')
-# set.seed(123)
-# load(file = '/home/rstudio/Projects/scDDG/Application/simulation/iAT2_scDNSob.RData')
-# # iAT2_scDNSob@GroupLabel
-# # TP53_scDNSob2 <- scDNS_2_creatNEAModel_v2(scDNSobject = TP53_scDNSob2,n.dropGene = 3000,
-# #                                         n.randNet = 20000,GroupLabel = TP53_scDNSob2@GroupLabel)
-# # NEAModel <- TP53_scDNSob2@NEAModel
-# iAT2_scDNSob <- scDNS_2_creatNEAModel_v2(scDNSobject = iAT2_scDNSob,n.dropGene = 3000,
-#                                         n.randNet = 20000,GroupLabel = iAT2_scDNSob@GroupLabel)
-# NEAModel <- iAT2_scDNSob@NEAModel
-#
-# save(NEAModel,file = '/home/rstudio/Projects/scDDG/Application/simulation/test_NEAModel_DSP.RData')
-
-# load(file = '/home/rstudio/Projects/scDDG/Application/simulation/test_NEAModel_DSP.RData')
-#
-# iAT2_scDNSob@NEAModel <- NEAModel
-# iAT2_scDNSob <- scDNS_3_GeneZscore_v2(iAT2_scDNSob,reCreatNEA=FALSE,PositiveGene='DSP',repTime=1,testTime=5,FDRmethods='BH')
-#
-#
-# iAT2_scDNSob@Zscore['DSP',]
-# sum(iAT2_scDNSob@Zscore$p_adj<0.1)
-
-
-# load(file = '/home/rstudio/Projects/scDDG/Application/simulation/TP53_scDNSob2.RData')
-# set.seed(123)
-# # load(file = '/home/rstudio/Projects/scDDG/Application/simulation/iAT2_scDNSob.RData')
-# # # iAT2_scDNSob@GroupLabel
-# TP53_scDNSob2 <- scDNS_2_creatNEAModel_v2(scDNSobject = TP53_scDNSob2,n.dropGene = 3000,
-#                                         n.randNet = 20000,GroupLabel = TP53_scDNSob2@GroupLabel)
-#
-# save(TP53_scDNSob2,file = '/home/rstudio/Projects/scDDG/Application/simulation/TP53_scDNSob2_combineP.RData')
-#
-# TP53_scDNSob2 <- scDNS_3_GeneZscore_v2(TP53_scDNSob2,reCreatNEA=TRUE,PositiveGene='TP53',repTime=1,testTime=10,FDRmethods='BH')
-#
-#
-# save(TP53_scDNSob2,file = '/home/rstudio/Projects/scDDG/Application/simulation/TP53_scDNSob2_combineP.RData')
-
-# load(file = '/home/rstudio/Projects/scDDG/Application/simulation/test_NEAModel_DSP.RData')
-# combine_stouffer(df = IFNB_scDNSob@Zscore[,c('randNet', 'shuffleLabel', 'RandDistrubution')],corr_adjust = T,FDRmethods = 'BH' )['IFNAR1',]
 
 
 combine_stouffer <- function(df,CenterCut=c(0.3,0.7),robust_center = TRUE,corr_adjust=TRUE,FDRmethods = 'BH' ){
 
-  # colQuantiles(as.matrix(ZsDF),probs = c(0.2,0.8))
-
   Z <- apply(as.matrix(df), 2, function(x){
     qx <- quantile(x,CenterCut)
     cx <- x[x>qx[1]&x<qx[2]]
-    # mx <- median(cx)
-    # sdx <- mad(cx) * 1.4826
-    # x <- (x-mx)/sdx
     mx <- mean(cx)
     sdx <- sd(cx)
     x <- (x-mx)/sdx
   })
-  # par(mfrow = c(1, 4))
-  # hist(ZsDF[,1])
-  # hist(ZsDF[,2]/sd(ZsDF[,2]))
-  # hist(ZsDF[,3])
-  # plot(ZsDF[,1],ZsDF[,3])
-  #
-  # par(mfrow = c(1, 3))
-  # hist(Z[,1])
-  # hist(Z[,2])
-  # hist(Z[,3])
+
   if (corr_adjust) {
     Sigma <- cov(scale(Z))
   } else {
@@ -835,13 +747,14 @@ combine_stouffer <- function(df,CenterCut=c(0.3,0.7),robust_center = TRUE,corr_a
 
   combined_z <- num / as.numeric(den)
 
-  p_comb <- 1 - pnorm(combined_z) # 单边
+  p_comb <- 1 - pnorm(combined_z) # one side
   p_comb[p_comb==0] <- dnorm(combined_z)[p_comb==0]
   print(sum(p.adjust(p_comb,'BH')<0.01))
   print(sum(p.adjust(p_comb,'BH')<0.05))
   print(sum(p.adjust(p_comb,'BH')<0.1))
   data.frame(df, combined_z, p_comb,p_adj=p.adjust(p_comb,FDRmethods),acc=getAccByScore(combined_z)*100)
 }
+
 scDNS_cluster_4 <- function(sob,scZscore,DoUmap=TRUE,resolution=c(0.2,0.5,0.8),zsFeatureSel=FALSE){
   sob <- FindVariableFeatures(sob)
   data1 <- sob@assays$RNA@data[sob@assays$RNA@var.features,]
@@ -913,39 +826,7 @@ scDNS_cluster_5 <- function(sob,scZscore,
                                doUMAP=TRUE,
                                doTSNE=TRUE)
   sob
-  # StimulateData <- FindClusters(StimulateData,graph.name = paste(red.name,'_SNN',sep = ''),resolution = resolution)
-  # StimulateData <- RunPhate(StimulateData)
 
-
-  # oldRed <- so@reductions[[reduction]]@cell.embeddings
-  #
-
-  # Loading <- Loading*(norm(oldRed[,1,drop=F],type = "2")/
-  #                       norm(matrix(Loading,ncol = 1),type = "2"))*biasToscDNS
-  # NewEmbeding <- cbind(oldRed,`TempX`=Loading)
-  # n_dims <- ncol(NewEmbeding)
-  # colnames(NewEmbeding) <- paste(red.name,1:ncol(NewEmbeding),sep = '_')
-  # NewEmbeding <- CreateDimReducObject(embeddings = NewEmbeding)
-  #
-  # so[[red.name]] <- NewEmbeding
-  # if(doUMAP){
-  #   message('doUMAP')
-  #   so <- RunUMAP(so,reduction = red.name,dims=1:n_dims, reduction.name = paste(red.name,"umap",sep = '_'))
-  # }
-  # if(doTSNE){
-  #   message('doTSNE')
-  #   so <- RunTSNE(so,reduction = red.name,dims=1:n_dims, reduction.name = paste(red.name,"tsne",sep = '_'))
-  # }
-  # if(doCluster){
-  #   message('doCluster')
-  #   ncps <- ncol(so@reductions[[red.name]]@cell.embeddings)
-  #   so = FindNeighbors(so,reduction =red.name,graph.name = paste(red.name,'_SNN',sep=''),dims = 1:ncps)
-  #   so = FindClusters(so,resolution =resolution,graph.name = paste(red.name,'_SNN',sep=''))
-  # }
-
-  # so
-  # StimulateData <- FindClusters(StimulateData,graph.name = paste(red.name,'_SNN',sep = ''),resolution = resolution)
-  # StimulateData <- RunPhate(StimulateData)
 }
 
 scDNS_cluster_6 <- function(sob,

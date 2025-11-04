@@ -2,9 +2,7 @@
 % Please edit documentation in R/Visualization.R
 \name{densityCompare3}
 \alias{densityCompare3}
-\title{densityCompare3
-visualize and compare the conditional density distributions of gene pairs (edges) between two different biological contexts,
-likely representing a control (Context A) and a stimulation or perturbed state (Context B)}
+\title{Visualizing Conditional Density Distributions Across Biological Contexts}
 \usage{
 densityCompare3(scDNSobject, Nodes, topEdge = 10, EdgeID = NULL, ncol = 5)
 }
@@ -23,7 +21,6 @@ densityCompare3(scDNSobject, Nodes, topEdge = 10, EdgeID = NULL, ncol = 5)
 ggplot object
 }
 \description{
-densityCompare3
 visualize and compare the conditional density distributions of gene pairs (edges) between two different biological contexts,
 likely representing a control (Context A) and a stimulation or perturbed state (Context B)
 }

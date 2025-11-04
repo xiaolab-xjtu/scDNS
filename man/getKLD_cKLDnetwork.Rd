@@ -25,7 +25,7 @@ getKLD_cKLDnetwork(
     t(matrix(1:n.coarse, nrow = n.coarse, ncol = n.coarse)))),
   returnCDS = TRUE,
   parllelModel = c("foreach", "bplapply")[1],
-  rb.jsd = F
+  rb.jsd = FALSE
 )
 }
 \arguments{
@@ -63,7 +63,7 @@ getKLD_cKLDnetwork(
 
 \item{returnCDS}{A logical value indicating whether to return the conditional probability density}
 
-\item{parllelModel}{parllelModel c('foreach','bplapply')[1]}
+\item{parllelModel}{parllelModel c('foreach','bplapply'). def:foreach}
 
 \item{rb.jsd}{(def:FALSE)}
 }

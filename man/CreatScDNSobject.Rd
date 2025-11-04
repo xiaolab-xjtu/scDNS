@@ -81,5 +81,5 @@ CreatScDNSobject(
 
 }
 \description{
-CreatScDNSobject
+creat scDNS object
 }

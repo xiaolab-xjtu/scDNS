@@ -8,18 +8,25 @@ scDNS_2_creatNEAModel_v2(
   scDNSobject,
   n.dropGene = NULL,
   n.randNet = NULL,
+  repTime = 5,
   sdBias = NULL,
   GroupLabel = NULL
 )
 }
 \arguments{
-\item{scDNSobject}{scDNS objcet}
+\item{scDNSobject}{scDNSobject}
 
-\item{GroupLabel}{}
+\item{n.dropGene}{Integer, number of cells sampled for model building (def:3000)}
+
+\item{n.randNet}{Integer, number of cells sampled for model building (def:20000)}
+
+\item{repTime}{}
+
+\item{sdBias}{Numeric value, bias coefficient used to penalize low degree genes(>=1) (def:1.1)}
 }
 \value{
 
 }
 \description{
-scDNS_2_creatNEAModel_v2
+Creates a null model for network enrichment analysis by random sampling of genes and networks.
 }

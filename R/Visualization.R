@@ -265,12 +265,12 @@ densityCompare3 <- function (scDNSobject, Nodes, topEdge=10,
 
         stat_function(fun = function(x){predict(CTL_fit$models[[CTL_best_name]]$fit,newdata = data.frame(x=x))},
                       color = "darkred", size = 1,xlim = c(0, 19)) +
-        new_scale_fill()+
+        ggnewscale::new_scale_fill()+
         geom_raster(data = STIM_Pdata$Pdata,mapping = aes(gridx-1,gridy-1,fill = z),interpolate = T,alpha=0.5)+
         scale_fill_gradientn(colours = c('transparent','darkblue'))+
         stat_function(fun = function(x){predict(STIM_fit$models[[STIM_best_name]]$fit,newdata = data.frame(x=x))},
                       color = "darkblue", size = 1,xlim = c(0, 19)) +theme_pretty()+labs(x=Gene1,y=Gene2)+NoLegend()+NoAxes2(keep.axis.title = T)+
-        geom_table(data = df,
+        ggpmisc::geom_table(data = df,
                    aes(x = x, y = y, label = tb),size =2,table.theme = tbtheme)
       print(i)
       p
@@ -555,7 +555,43 @@ estimate_double_sigmoid_start <- function(peaks){
   list(A1=A1, k1=k1, x01=x01, A2=A2, k2=k2, x02=x02, B=B)
 }
 
-estimate_double_sigmoid_start_safe <- function(peaks){
 
+getDenstiyPlotDREMI <- function(z){
+  grid = expand.grid(1:nrow(z),1:ncol(z))
+  Pdata = data.frame(gridx = grid[,1],gridy=grid[,2],z = matrix(z,ncol = 1))
+  max_d = apply(z, 1,function(x)which(x==max(x)))
+
+
+  # z2 = (z[1:19,1:19]+z[2:20,2:20])/2
+  # grid2 = expand.grid(1:nrow(z2)+0.5,1:ncol(z2)+0.5)
+  # Pdata2 = data.frame(gridx = grid2[,1],gridy=grid2[,2],z = matrix(z2,ncol = 1))
+  # ggplot(Pdata,aes(gridx,gridy,z = z))+geom_contour_filled(bins =ncolor)+scale_fill_manual(
+  #   values = colorRampPalette(colors, interpolate = c("linear"))(ncolor))+
+  #   theme_cowplot()+xlab('G1')+ylab('G2')+geom_point()+NoLegend()+AddBox()
+  if(is.matrix(max_d)){
+    Pdata_line=data.frame(x=rep(nrow(z)/2,nrow(z)),y=rep(nrow(z)/2,nrow(z)),stringsAsFactors = F)
+  }else{
+    for(i in 1:(length(max_d)-2)){
+      allcombinations = expand.grid(max_d[[i]],max_d[[i+1]],max_d[[i+2]])
+      rowsd = matrixStats::rowSds(allcombinations%>%as.matrix())
+      minID = which(rowsd==min(rowsd))
+      minID = minID[which.min(abs((allcombinations[,3]-allcombinations[,2]))[minID])]
+      max_d[[i]]=allcombinations[minID,1]
+      max_d[[i+1]]=allcombinations[minID,2]
+      max_d[[i+2]]=allcombinations[minID,3]
+    }
+    Pdata_line = data.frame(x=1:nrow(z),y=unlist(max_d),stringsAsFactors = F)
+  }
+  list(Pdata=Pdata,Pdata_line=Pdata_line)
+  # ggplot()+geom_contour_filled(data = Pdata,mapping = aes(gridx,gridy,z = z),bins =ncolor)+
+  #   scale_fill_manual(values = colorRampPalette(colors, interpolate = c("linear"))(ncolor))+
+  #   geom_point(data = Pdata,mapping = aes(gridx,gridy),fill='grey50',color='transparent',alpha=0.1,shape=21)+
+  #   geom_line(data = Pdata_line,mapping = aes(x,y),size=2,color='white')+
+  #   theme_cowplot()+xlab('G1')+ylab('G2')+NoLegend()+AddBox()
+  #
+  #
+  # Pdata3 = rbind(Pdata,Pdata2)
+  # ggplot(Pdata3,aes(gridx,gridy,z = z))+geom_contour_filled(bins =ncolor)+scale_fill_manual(
+  #   values = colorRampPalette(colors, interpolate = c("linear"))(ncolor))+
+  #   theme_cowplot()+xlab('G1')+ylab('G2')+geom_point()
 }
-

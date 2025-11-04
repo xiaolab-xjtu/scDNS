@@ -21,3 +21,4 @@ likelihoodFromMixEM_3dToResult_constrMean(
 likelihoodFromMixEM_3dToResult_constrMean
 mean.constr = c(NA,0,NA)
 }
+\keyword{internal}

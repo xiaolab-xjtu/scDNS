@@ -16,7 +16,7 @@
 #' @param ds.method Method to calculate joint probability density, optional knn and kde (def:knn)
 #' @param divergence Method for calculating divergence, optional jsd (Jensen-Shannon divergence) and kld (Kullback–Leibler divergence)(def:jsd)
 #' @param h A parameter used for kernel density estimation, which only takes effect when the density estimation method is kde (def:1).
-#' @param parllelModel parllelModel c('foreach','bplapply')[1]
+#' @param parllelModel parllelModel c('foreach','bplapply'). def:foreach
 #' @param Div_weight sqrt(as.vector(matrix(1:n.coarse,nrow = n.coarse,ncol = n.coarse)*t(matrix(1:n.coarse,nrow = n.coarse,ncol = n.coarse)))),
 #' @param rb.jsd (def:FALSE)
 #'
@@ -45,7 +45,7 @@ getKLD_cKLDnetwork<-function(ExpData,
                              Div_weight = sqrt(as.vector(matrix(1:n.coarse,nrow = n.coarse,ncol = n.coarse)*t(matrix(1:n.coarse,nrow = n.coarse,ncol = n.coarse)))),
                              returnCDS = TRUE,
                              parllelModel=c('foreach','bplapply')[1],
-                             rb.jsd=F){
+                             rb.jsd=FALSE){
   sqrtForNeg <- function(m){
     sign(m)*sqrt(abs(m))
   }
@@ -1045,7 +1045,7 @@ JSD_batch_matrix <- function(Ctl,Pert,base=exp(1)){
 
 JSD_batch_matrix_rawMt_robust <- function(rawDensity1,
                                           rawDensity2){
-  # 扰动，增加结果鲁棒性减少，对微弱差异的敏感度
+  #Enhance robustness and reduce sensitivity to subtle variations
 
   Indenx_r1  <- matrix(1:(22*22),22,22)
   Indenx_cen <- Indenx_r1[2:21,2:21]
@@ -1113,5 +1113,14 @@ MI_from_ked2d_v <- function(x,logbase=2,nx=20){
   MI
 }
 
+JSD_batch_matrix_rawMt <- function(Ctl,Pert,base=exp(1)){
+  Ctl = Ctl+1e-200
+  Pert = Pert+1e-200
+  Ctl = Ctl/base::rowSums(Ctl)
+  Pert = Pert/base::rowSums(Pert)
+  M <- (Pert + Ctl) / 2
 
+  jsd_mt <- (Ctl * log(Ctl / M,base = base)+Pert * log(Pert / M,base = base))/2
+  jsd_mt
+}
 

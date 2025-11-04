@@ -62,25 +62,17 @@ creatNEAModel<-function(counts,
   }
   uniCase = unique(GroupLabel)
   #
-  # ExpData = SommthOutLier_UP(mt = ExpData,zero.rm = T,percentile = 0.98)
-  # SommthOutLier_UP(mt = ExpData['HBQ1',,drop=F],zero.rm = T,percentile = 0.99)%>%hist()
-  #
-  # ExpNc = rowSums(counts>0)
-  # ExpData = ExpData[ExpNc>=minExpFeauture,]
-  # sn = Likelihood[rownames(ExpData)]
-  # RandGene = sample(names(sn[sn>0.90]),pmin(n.dropGene,length(sn[sn>0.90])))
   RandGene = sample(rownames(ExpData),pmin(n.dropGene,nrow(ExpData)))
   ExpData = ExpData[RandGene,]
   ExpData[,GroupLabel==uniCase[1]] = apply(ExpData[,GroupLabel==uniCase[1]] , 1, sample)%>%t()
   ExpData[,GroupLabel==uniCase[2]] = apply(ExpData[,GroupLabel==uniCase[2]] , 1, sample)%>%t()
   counts = counts[RandGene,]
-  # 计算dropout矩阵
-  # dropoutMatrix = ncol(counts)-Matrix::tcrossprod(counts==0 ) # Number of cells expressing neither A nor B
+  # dropout
   dropoutMatrix = Matrix::tcrossprod(counts!=0 ) # number of cells expressing both G1 and G2
   dropoutMatrix_log = round(log10(dropoutMatrix+1),1)
   uniNpoints = unique(as.vector(dropoutMatrix_log))
   uniNpoints = sort(uniNpoints)
-  # 生成随机网络
+  #
   message('Rand network')
   CadiateNet = NULL
   CadidateGene = rownames(dropoutMatrix_log)
@@ -103,28 +95,9 @@ creatNEAModel<-function(counts,
   CadiateNet$npoint_ds = round(CadiateNet$npoint_log,1)
   CadiateNet <- CadiateNet[as.character(CadiateNet$npoint_ds)%in%names(table(CadiateNet$npoint_ds))[table(CadiateNet$npoint_ds)>30],]
 
-  # CadiateNet2$npoint = dropoutMatrix[sub2ind(match(CadiateNet2[,1],rownames(dropoutMatrix)),
-  #                                           match(CadiateNet2[,2],rownames(dropoutMatrix)),
-  #                                           nrow = nrow(dropoutMatrix),ncol = ncol(dropoutMatrix))]
-  # CadiateNet2$npoint_log = log10(CadiateNet2$npoint+1)
-  # CadiateNet2$npoint_ds = round(CadiateNet2$npoint_log,1)
-  #
-  # CadiateNet2$npoint2 = dropoutMatrix[sub2ind(match(CadiateNet2[,1],rownames(dropoutMatrix)),
-  #                                            match(CadiateNet2[,2],rownames(dropoutMatrix)),
-  #                                            nrow = nrow(dropoutMatrix),ncol = ncol(dropoutMatrix))]
-  # CadiateNet2$npoint_log2 = log10(CadiateNet2$npoint2+1)
-  # CadiateNet2$npoint_ds2 = round(CadiateNet2$npoint_log2,1)
-  #
-  # ggplot(CadiateNet2,aes(npoint_log,Div,color=npoint_log3))+geom_point()+scale_color_viridis_b()
-  # pec = log10(rowSums2(ExpData!=0)+1)
-  # names(pec) = rownames(ExpData)
-  # CadiateNet2$npoint_log3 = rowMins(matrix(c(pec[CadiateNet2[,1]],pec[CadiateNet2[,2]]),ncol = 2))
 
-
-  # CadiateNet = CadiateNet[sample(nrow(CadiateNet),2000),]
-  # randLabel = sample(GroupLabel)
   randLabel = GroupLabel
-  # preFilterNet(CadiateNet,ExpData)
+
 
   RawKLD_R = getKLD_cKLDnetwork(ExpData = ExpData,
                                 Network = CadiateNet,
@@ -145,70 +118,7 @@ creatNEAModel<-function(counts,
                                 h = h,
                                 noiseSd=noiseSd,
                                 parllelModel=parllelModel)
-  # EdgeID=900
-  # Pdata <- data.frame(G1=ExpData[CadiateNet2[EdgeID,1],],G2=ExpData[CadiateNet2[EdgeID,2],],label=randLabel)
-  # # Pdata <- data.frame(G1=ExpData['AP3B2',],G2=ExpData['FTL',],label=randLabel)
-  # # Pdata <- data.frame(G1=counts[CadiateNet2[7659,1],],G2=counts[CadiateNet2[7659,2],],label=randLabel)
-  # ggplot(Pdata,aes(G1,G2,color=label))+geom_point()
-  # DensityPlotDF_withPoint(Pdata$G1,Pdata$G2)
-  # showDenstiy(RawKLD_R,EdgeID = EdgeID)
-  # densityCompare2(RawKLD_R,EdgeID = EdgeID)
-  # RawKLD_R$Network[EdgeID,]
-  # #
-  # RawKLD_R2 = getKLD_cKLDnetwork(ExpData = ExpData,
-  #                                Network = CadiateNet,
-  #                                k=10,
-  #                                GroupLabel=randLabel,
-  #                                n.grid = n.grid,
-  #                                n.coarse = n.coarse,
-  #                                loop.size = loop.size,
-  #                                parallel.sz = parallel.sz,
-  #                                verbose = verbose,
-  #                                exclude.zero = FALSE,
-  #                                NoiseRemove = NoiseRemove,
-  #                                CoarseGrain = TRUE,
-  #                                returnCDS = TRUE,
-  #                                divergence = 'jsd',
-  #                                ds.method = 'knn')
-  # RawKLD_R2 = getKLD_cKLDnetwork_fromDS(RawDS_1 = RawKLD_R$GontextA_DS,
-  #                                       RawDS_2 = RawKLD_R$GontextB_DS,
-  #                                       Network = RawKLD_R$Network,
-  #                                       GroupLabel = RawKLD_R$uniCase,
-  #                                       divergence = 'jsd')
-  # RawKLD_R$Network$id = 1:nrow(RawKLD_R$Network)
-  # RawKLD_R$Network$npoint_log = CadiateNet$npoint_log
-  # View(RawKLD_R$Network)
-  # EdgeID = 87
-  # showDenstiy(RawKLD_R,EdgeID = EdgeID)
-  # Network = CadiateNet[838,]
-  # iAT2_data$randLabel = randLabel
-  # FeatureScatter(iAT2_data, feature1 =RawKLD_R$Network[EdgeID,1], feature2 = RawKLD_R$Network[EdgeID,2],group.by = 'randLabel')
-  # filteredNetid = RawKLD_R$Network$npoint_log>log10(minExpFeauture)
-
-  #
-
-  # RandHeight.KLD = getCutHeightWithDensityFeature(DS1 = RawKLD_R$ContextA_cDS$DS[filteredNetid,],
-  #                                                 DS2 = RawKLD_R$ContextB_cDS$DS[filteredNetid,])
-  #
-  # RandHeight.cKLD = getCutHeightWithDensityFeature(DS1 = RawKLD_R$ContextA_cDS$cDS_1[filteredNetid,],
-  #                                                  DS2 = RawKLD_R$ContextB_cDS$cDS_1[filteredNetid,])+
-  #   getCutHeightWithDensityFeature(DS1 = RawKLD_R$ContextA_cDS$cDS_2[filteredNetid,],
-  #                                  DS2 = RawKLD_R$ContextB_cDS$cDS_2[filteredNetid,])
-  # RandHeight.cKLD = RandHeight.cKLD/2
-
-  # RandHeight = getCutHeightWithDensityCombine(DS1 = RawKLD_R$ContextA_cDS$DS[filteredNetid,],
-  #                                             DS2 = RawKLD_R$ContextB_cDS$DS[filteredNetid,],
-  #                                             cDS_C1_D1 = RawKLD_R$ContextA_cDS$cDS_1[filteredNetid,],
-  #                                             cDS_C1_D2 = RawKLD_R$ContextA_cDS$cDS_2[filteredNetid,],
-  #                                             cDS_C2_D1 = RawKLD_R$ContextB_cDS$cDS_1[filteredNetid,],
-  #                                             cDS_C2_D2 = RawKLD_R$ContextB_cDS$cDS_2[filteredNetid,])
-
-  # Pdata = data.frame(G1=ExpData[CadiateNet2[EdgeID,1],],G2=ExpData[CadiateNet2[EdgeID,2],],group=randLabel)
-  # ggplot(Pdata,aes(G1,G2,color=group))+geom_point()
-  # Pdata = Pdata[!(Pdata$G1==0&Pdata$G2==0),]
-  # DensityPlotDF_withPoint(x = Pdata$G1,y = Pdata$G2)
-
-  CadiateNet2 = RawKLD_R$Network#[filteredNetid,] # 去掉了点少于10^1.6的关系对
+  CadiateNet2 = RawKLD_R$Network
   CadiateNet2$id = 1:nrow(CadiateNet2)
   RawDistrbution.Div <- NULL
   RawDistrbution.cDiv <- NULL
@@ -219,13 +129,7 @@ creatNEAModel<-function(counts,
   }
   names(RawDistrbution.Div) <- unique(CadiateNet2$npoint_ds)%>%sort()
   names(RawDistrbution.cDiv) <- unique(CadiateNet2$npoint_ds)%>%sort()
-  # Pchi.Div=toChiSquareX(CadiateNet2$Div,CadiateNet2$npoint_ds,RawDistrbution.Div)
-  # Pchi.cDiv_D1=toChiSquareX(CadiateNet2$cDiv_D1,CadiateNet2$npoint_ds,RawDistrbution.cDiv)
-  # Pchi.cDiv_D2=toChiSquareX(CadiateNet2$cDiv_D2,CadiateNet2$npoint_ds,RawDistrbution.cDiv)
-  # Pchi.Div = addLabel2Colnames(Pchi.Div,label = 'Div.',before = TRUE)
-  # Pchi.cDiv_D1 = addLabel2Colnames(Pchi.cDiv_D1,label = 'cDiv_D1.',before = TRUE)
-  # Pchi.cDiv_D2 = addLabel2Colnames(Pchi.cDiv_D2,label = 'cDiv_D2.',before = TRUE)
-  # Pchi = cbind(Pchi.Div,Pchi.cDiv_D1,Pchi.cDiv_D2)
+
   ad.NetRScore3 <- function(netScore,DivFit,cDivFit){
     Pchi.Div=toChiSquareX(netScore$Div,netScore$npoint_ds,DivFit)
     Pchi.cDiv_D1=toChiSquareX(netScore$cDiv_D1,netScore$npoint_ds,cDivFit)
@@ -236,8 +140,7 @@ creatNEAModel<-function(counts,
     Pchi = cbind(Pchi.Div,Pchi.cDiv_D1,Pchi.cDiv_D2)
     cbind(netScore,Pchi)
   }
-  # fit_poly(CadiateNet2$npoint_ds,y = Pchi.Div$chiSquare)
-  # fit_poly(CadiateNet2$npoint_ds,y = Pchi.cDiv_D1$chiSquare)
+
   toChiSquareX<-function(rs,bias,DistrbutionList){
     Pvalues <-  rs
     uniBias <- unique(bias)
@@ -271,8 +174,6 @@ creatNEAModel<-function(counts,
   CadiateNet_samll$npoint_log = dropoutMatrix_log[sub2ind(match(CadiateNet_samll[,1],rownames(dropoutMatrix_log)),
                                                           match(CadiateNet_samll[,2],rownames(dropoutMatrix_log)),
                                                           nrow = nrow(dropoutMatrix_log),ncol = ncol(dropoutMatrix_log))]
-  # CadiateNet_samll = CadiateNet_samll[CadiateNet_samll$dropout_log>log10(minExpFeauture),]
-  # CadiateNet_samll = CadiateNet_samll[sampleByGroup(1:nrow(CadiateNet_samll),infGroup = CadiateNet_samll$source,s.num = 200,replace = T),]
 
   RawKLD_R_samll = getKLD_cKLDnetwork(ExpData = ExpData,
                                       Network = CadiateNet_samll,
@@ -298,67 +199,6 @@ creatNEAModel<-function(counts,
   CadiateNet_samll = ad.NetRScore3(netScore = CadiateNet_samll,RawDistrbution.Div,RawDistrbution.cDiv)
   ad.dropModel = list(AdModelList_1=RawDistrbution.Div,
                       AdModelList_2=RawDistrbution.cDiv)
-
-
-  # thresholdx = sqrt(-log10(0.5))
-  # CadiateNet_samll$Div.chiSquare[CadiateNet_samll$Div.chiSquare<thresholdx]=0
-  # CadiateNet_samll$cDiv_D1.chiSquare[CadiateNet_samll$cDiv_D1.chiSquare<thresholdx]=0
-  # CadiateNet_samll$cDiv_D2.chiSquare[CadiateNet_samll$cDiv_D2.chiSquare<thresholdx]=0
-  # DegreeDist = table(c(CadiateNet_samll$source,CadiateNet_samll$target))
-  # ScoreType = 'KLD.ad.chiSquare'
-  # ConnectedGenes = names(DegreeDist[DegreeDist>=2])
-  # ConnectedEdge = lapply(ConnectedGenes, function(x)which(CadiateNet_samll[,1:2]==x,arr.ind = T)[,1]%>%as.numeric())
-  # ConnectedEdge = lapply(ConnectedEdge, function(x)t(combn(x,2)))
-  # ConnectedEdge = do.call('rbind',ConnectedEdge)
-  # CEdgeScore = data.frame(x=CadiateNet_samll[ConnectedEdge_id[,1],ScoreType],
-  #                         y=CadiateNet_samll[ConnectedEdge_id[,2],ScoreType]) # 相关联边的得分
-  # xr = range(CEdgeScore$x)
-  # dscr = findInterval_Meandata(CEdgeScore$x,seq(xr[1],xr[2],(xr[2]-xr[1])/10))%>%unique()
-  # CEdgeScore$x_dc = findInterval_Meandata(CEdgeScore$x,seq(xr[1],xr[2],(xr[2]-xr[1])/10))
-  # CEdgeScore$y_dc = findInterval_Meandata(CEdgeScore$y,seq(xr[1],xr[2],(xr[2]-xr[1])/10))
-  # for(i in 1:length(dscr)){
-  #   i=1
-  #   hist(CEdgeScore$y[CEdgeScore$x_dc==dscr[i]])
-  #   i=i+1
-  # }
-  #
-  # Ras_3 = NULL
-  # for(i in 1:30){
-  #   degreeD = c(seq(1,9,1),seq(10,280,10))
-  #   Ras_temp = data.frame(degree=degreeD,
-  #                         RawScore = sapply( degreeD, function(x)sum(sample(CadiateNet_samll$Div.chiSquare,x))))
-  #   Ras_3 = rbind(Ras_3,Ras_temp)
-  # }
-  # seaM=sea_fit(Dsize = Ras_3$degree,RawScores = Ras_3$RawScore,coarse = F)
-  # DegreeD = table(unlist(CadiateNet_samll[,1:2]))
-  # DegreeD = sort(DegreeD,decreasing = T)
-  # RandNet_x = CadiateNet_samll
-  #
-  # NetList=tapply(c(1:nrow(CadiateNet_samll),1:nrow(CadiateNet_samll)), c(CadiateNet_samll$source,CadiateNet_samll$target), list)
-  # Ras = NULL
-  # for(i in c(seq(1,9,1),seq(10,max(DegreeD),round(max(DegreeD)/50,0)))){
-  #   Netid = lapply(NetList, function(x)if(length(x)>=i&i!=1){sample(x,i)}else if(length(x)>=i&i==1){x}else{NA})
-  #   Netid = Netid[sapply(Netid, length)==i]
-  #   CaidGenes = names(Netid)
-  #   if(length(CaidGenes)>=30){
-  #     CaidGenes = sample(CaidGenes,30)
-  #     for(j in 1:30){
-  #       FeatureMatrix = cbind(RawKLD_R_samll$ContextA_cDS$DS[Netid[[CaidGenes[j]]],,drop=F],
-  #                             RawKLD_R_samll$ContextB_cDS$DS[Netid[[CaidGenes[j]]],,drop=F])
-  #       Ras_temp= getEdgeDviersity(Net = RandNet_x[Netid[[CaidGenes[j]]],,drop=F],
-  #                        FeatureMatrix = FeatureMatrix,
-  #                        cutHeight = RandHeight,
-  #                        Nodes = CaidGenes[j],
-  #                        scoreType = 'KLD.ad.chiSquare',nx=n.coarse)
-  #       # Ras_temp=data.frame(gene = CaidGenes[j],degree=i,RawScore=sum(RandNet_x[Netid[[CaidGenes[j]]],'cKLD_1.ad.chiSquare']))
-  #       Ras = rbind(Ras,Ras_temp)
-  #     }
-  #
-  #   }
-  # }
-  #
-  #
-  # seaMR = sea_fit(Dsize = Ras$Degree,RawScores = Ras$RawScore1,coarse = F)
   #
   CadiateNet_samll$LR = pmin(Likelihood[CadiateNet_samll$source],Likelihood[CadiateNet_samll$target])
   CadiateNet_samll = CadiateNet_samll[CadiateNet_samll$LR>0.99,]
@@ -366,9 +206,8 @@ creatNEAModel<-function(counts,
   DegreeD = table(unlist(CadiateNet_samll[,1:2]))
   degreeRange = floor(10^seq(log10(1),log10(max(DegreeD)),0.05))%>%unique()
   RandRawScore = NULL
-  # degreeRange = c(seq(1,9,1),seq(10,max(DegreeD),round(max(DegreeD)/50,0)))
   for(i in degreeRange){
-    # Netid = lapply(NetList, function(x)if(length(x)>=i&i!=1){sample(x,i)}else if(length(x)>=i&i==1){x}else{NA})
+    #
     Netid = lapply(NetList, function(x)if(length(x)>=i){sample(x,i)}else{NA})
     Netid = Netid[sapply(Netid, length)==i]
     CaidGenes = names(Netid)
@@ -405,28 +244,12 @@ creatNEAModel<-function(counts,
 
     }
   }
-  # RandRawScore$degree = ceiling(RandRawScore$degree)
-  # RandRawScore$degree = round(findInterval_Meandata(RandRawScore$degree,v = degreeRange),0)+1
-  # RandRawScore$degree = RandRawScore$degree%>%round(digits = 0)
-  # degreeFreq = table(RandRawScore$degree)
-  # RandRawScore = RandRawScore[RandRawScore$degree%in%as.numeric(names(degreeFreq[degreeFreq>50])),]
-  # RandRawScore = RandRawScore[RandRawScore$degree>1,]
-  # fit_poly(RandRawScore$degree,RandRawScore$Raw.Div)$p
-  # RandRawScore$degree = round(findInterval_Meandata(RandRawScore$degree,v = c(1,2,3,4,5,6,7,8,9,10,50,100,150,200,250)),0)
-  # # KLD
-  # SmmD=group_by(RandRawScore,degree)%>%summarise(sd=sd(Raw.Div),mean=mean(Raw.Div))%>%as.data.frame()
-  # MeanF = fit_poly(log10(RandRawScore$degree),RandRawScore$Raw.Div,degree = 5)$p
-  # SDF = fit_poly(SmmD$degree,SmmD$mean,degree = 5)
+
   RandRawScore$degree = ceiling(RandRawScore$degree*mean(CadiateNet_samll$LR))
-  ZscoreFit.Div = sea_fit_fix_st(Dsize = ceiling(RandRawScore$degree), # 改成了st分布
+  ZscoreFit.Div = sea_fit_fix_st(Dsize = ceiling(RandRawScore$degree), #
                               RawScores = RandRawScore$Raw.Div,coarse = F,
                               mean_1 = mean(RandRawScore$Raw.Div[RandRawScore$degree==1]),
                               sd_1 = sd(RandRawScore$Raw.Div[RandRawScore$degree==1])*sdBias)
-  # ZscoreFit.KLD = sea_fit(Dsize = log10(RandRawScore$degree),RawScores = log2(RandRawScore$Raw.KLD),coarse = F)
-  # RandRawScore_temp = RandRawScore[RandRawScore$degree>10,]
-  # ZscoreFit.Div = sea_fit(Dsize = log10(RandRawScore$degree),
-  #                         RawScores = RandRawScore$Raw.Div,
-  #                         coarse = F)
   #
   Zs = ZscoreFit.Div$cal_Zscore_Pvalue(RawScore =  RandRawScore$Raw.Div,
                                        Dsize = RandRawScore$degree,
@@ -436,21 +259,6 @@ creatNEAModel<-function(counts,
   RandRawScore$Zscores.Div = Zs$Zscores
   p.div<-DensityPlotDF_withPoint(log10(RandRawScore$degree),RandRawScore$Zscores)+
     xlab(expression(Log[10]('degree')))+ylab('Z-score')
-  # DensityPlotDF_withPoint(log10(RandZScore$degree),log10(RandZScore$Pvalues))+xlim(c(1,2.5))
-  # fit_poly(log10(RandZScore$degree),RandZScore$Zscores)$p|ZscoreFit.Div$CombinePs
-  # fit_poly(RandZScore$degree,RandZScore$Zscores)$p|ZscoreFit.Div$CombinePs
-  # randNois = fit_selm_distrubution(Zs$Zscores[Zs$Zscores>-3&Zs$Zscores<8])
-  # ZscoreFit.Div$ZscoreD = randNois$reslutP
-  # ZscoreFit.Div$CombinePs = CombinePlots(list(ZscoreFit.Div$SizeVsMean,ZscoreFit.Div$SizeVsStd,ZscoreFit.Div$ZscoreD),ncol = 3)
-  # ZscoreFit.Div$ParmetersInput$ParmetersZsD = randNois$ParmetersInput
-
-  # Zs = ZscoreFit.Div$cal_Zscore_Pvalue(RawScore = RandRawScore$Raw.cDiv,
-  #                                      Dsize = RandRawScore$degree,
-  #                                      ParmetersInput = ZscoreFit.Div$ParmetersInput)
-  # Zs = cbind(RandRawScore,Zs)
-  # fit_poly(log10(Zs$degree),Zs$Zscores)$p
-
-  #ZscoreFit.Div$CombinePs
   # cDiv
   ZscoreFit.cDiv = sea_fit_fix_st(Dsize = RandRawScore$degree,
                                RawScores = RandRawScore$Raw.cDiv,
@@ -485,11 +293,6 @@ creatNEAModel<-function(counts,
                                coarse = F,
                                mean_1 = mean(RandRawScore$Raw.Plus[RandRawScore$degree==1]),
                                sd_1 = sd(RandRawScore$Raw.Plus[RandRawScore$degree==1])*sdBias)
-  # ZscoreFit.Plus = sea_fit_fix(Dsize = RandRawScore$degree,
-  #                              RawScores = RandRawScore$Raw.Plus,
-  #                              coarse = F,
-  #                              mean_1 = NULL,
-  #                              sd_1 =NULL)
 
   Zs = ZscoreFit.Plus$cal_Zscore_Pvalue(RawScore =  RandRawScore$Raw.Plus,
                                         Dsize = RandRawScore$degree,
@@ -512,12 +315,6 @@ creatNEAModel<-function(counts,
   p.Mpl<-DensityPlotDF_withPoint(log10(RandRawScore$degree),RandRawScore$Zscores)+
     xlab(expression(Log[10]('degree')))+ylab('Z-score')
   #
-  # RandHeight = getCutHeightWithDensityCombine(DS1 = RawKLD_R_samll$ContextA_cDS$DS,
-  #                                             DS2 = RawKLD_R_samll$ContextB_cDS$DS,
-  #                                             cDS_C1_D1 = RawKLD_R_samll$ContextA_cDS$cDS_1,
-  #                                             cDS_C1_D2 = RawKLD_R_samll$ContextA_cDS$cDS_2,
-  #                                             cDS_C2_D1 = RawKLD_R_samll$ContextB_cDS$cDS_1,
-  #                                             cDS_C2_D2 = RawKLD_R_samll$ContextB_cDS$cDS_2)
 
   RandRawScore$Zscore.Plus <- RandRawScore$Zscores.Div+RandRawScore$Zscores.cDiv
   ZscoreFit.ZsPlus<- fit_selm_distrubution_ST(RandRawScore$Zscore.Plus)
@@ -538,68 +335,6 @@ creatNEAModel<-function(counts,
 
 
 }
-
-
-
-
-
-
-
-
-
-
-# showDenstiy<-function(EdgeScore,Nodes,EdgeID=NULL,interpolate=FALSE,filp=FALSE,subEdgeID=1,titleSzie=10){
-#   if(is.null(EdgeID)){
-#     if(length(Nodes)==1){
-#       EdgeID=EdgeScore$Network[,1]%in%Nodes|EdgeScore$Network[,2]%in%Nodes
-#       if(sum(EdgeID)>1){
-#         print(sum(EdgeID))
-#         EdgeID = which(EdgeID)[subEdgeID]
-#       }
-#     }else{
-#       EdgeID=EdgeScore$Network[,1]%in%Nodes&EdgeScore$Network[,2]%in%Nodes
-#     }
-#
-#   }
-#   if(sum(EdgeID+0)!=1&length(EdgeID)!=1){
-#     stop('EdgeID is mutiple or dose not exit')
-#   }
-#   subnet = EdgeScore$Network[EdgeID,]
-#   ContextA_R=EdgeScore$ContextA_cDS
-#   ContextB_R=EdgeScore$ContextB_cDS
-#   if(filp){
-#     p1<-DensityPlot_raster(ContextA_R$DS[EdgeID,],interpolate = interpolate,transpose = T)+
-#       xlab(subnet[1,2])+ylab(subnet[1,1])+NoLegend()+labs(subtitle='Joint probability')+FontSize(main=titleSzie)|
-#       DensityPlot_raster(ContextA_R$cDS_1[EdgeID,],addSideBar = T,transpose = F,interpolate = interpolate)+
-#       xlab(subnet[1,1])+ylab(subnet[1,2])+NoLegend()+labs(subtitle='Conditional probability')+FontSize(main=titleSzie)|
-#       DensityPlot_raster(ContextA_R$cDS_2[EdgeID,],addSideBar = T,transpose = T,interpolate = interpolate)+
-#       xlab(subnet[1,2])+ylab(subnet[1,1])+labs(subtitle='Conditional probability')+plot_annotation('Conetxt A')+FontSize(main=titleSzie)
-#     p2<-DensityPlot_raster(ContextB_R$DS[EdgeID,],interpolate = interpolate,transpose = T)+
-#       xlab(subnet[1,2])+ylab(subnet[1,1])+NoLegend()+labs(subtitle='Joint probability')+FontSize(main=titleSzie)|
-#       DensityPlot_raster(ContextB_R$cDS_1[EdgeID,],addSideBar = T,transpose = F,interpolate = interpolate)+
-#       xlab(subnet[1,1])+ylab(subnet[1,2])+NoLegend()+labs(subtitle='Conditional probability')+FontSize(main=titleSzie)|
-#       DensityPlot_raster(ContextB_R$cDS_2[EdgeID,],addSideBar = T,transpose = T,interpolate = interpolate)+
-#       xlab(subnet[1,2])+ylab(subnet[1,1])+labs(subtitle='Conditional probability')+
-#       plot_annotation(title = 'Conetxt B')+FontSize(main=titleSzie)
-#     p1/p2+plot_layout(guides='collect')
-#   }else{
-#     p1<-DensityPlot_raster(ContextA_R$DS[EdgeID,],interpolate = interpolate)+
-#       xlab(subnet[1,1])+ylab(subnet[1,2])+NoLegend()+labs(title='Joint probability')+FontSize(main=titleSzie)|
-#       DensityPlot_raster(ContextA_R$cDS_1[EdgeID,],addSideBar = T,transpose = F,interpolate = interpolate)+
-#       xlab(subnet[1,1])+ylab(subnet[1,2])+NoLegend()+labs(title='Conditional probability')+FontSize(main=titleSzie)|
-#       DensityPlot_raster(ContextA_R$cDS_2[EdgeID,],addSideBar = T,transpose = T,interpolate = interpolate)+
-#       xlab(subnet[1,2])+ylab(subnet[1,1])+labs(title='Conditional probability')+plot_annotation('Conetxt A')+FontSize(main=titleSzie)
-#     p2<-DensityPlot_raster(ContextB_R$DS[EdgeID,],interpolate = interpolate)+
-#       xlab(subnet[1,1])+ylab(subnet[1,2])+NoLegend()+labs(title='Joint probability')+FontSize(main=titleSzie)|
-#       DensityPlot_raster(ContextB_R$cDS_1[EdgeID,],addSideBar = T,transpose = F,interpolate = interpolate)+
-#       xlab(subnet[1,1])+ylab(subnet[1,2])+NoLegend()+labs(title='Conditional probability')+FontSize(main=titleSzie)|
-#       DensityPlot_raster(ContextB_R$cDS_2[EdgeID,],addSideBar = T,transpose = T,interpolate = interpolate)+
-#       xlab(subnet[1,2])+ylab(subnet[1,1])+labs(title='Conditional probability')+plot_annotation('Conetxt B')+FontSize(main=titleSzie)
-#     p1/p2+plot_layout(guides='collect')
-#   }
-#
-# }
-
 
 
 
@@ -668,103 +403,58 @@ boxcox_t<-function(x){
 
 
 
-combineEdgeScore<-function(EdgeScore,NEAModel){
-  addLabel2Colnames <-function(x,label,sep = ''){
-    colnames(x) = paste(colnames(x),label,sep = sep)
-    x
-  }
-  AdModelList_1 = NEAModel$ad.dropModel$AdModelList_1
-  AdModelList_2 = NEAModel$ad.dropModel$AdModelList_2
-  RandHeight = NEAModel$RandHeight$RandHeight
-  ZscoreFit.KLD = NEAModel_ttt$ZscoreFit.KLD
-  ZscoreFit.cKLD = NEAModel_ttt$ZscoreFit.cKLD
-  ZscoreFit.cKLDorKLD = NEAModel_ttt$ZscoreFit.cKLDorKLD
-  net = EdgeScore$Network
-  net = adjustNetScore(net = net,
-                       AdModelList_1 = AdModelList_1,
-                       AdModelList_2 = AdModelList_2)
-  net$cKLDorKLD.ad.chiSquare_1 = pmax(net$KLD.ad.chiSquare,net$cKLD_1.ad.chiSquare)
-  net$cKLDorKLD.ad.chiSquare_2 = pmax(net$KLD.ad.chiSquare,net$cKLD_2.ad.chiSquare)
-
-  RawScore = getEdgeDviersity_ds_cds(net = net,
-                                     FeatureMatrix_DS = cbind(EdgeScore$ContextA_cDS$DS,EdgeScore$ContextB_cDS$DS),
-                                     FeatureMatrix_cDS_D1 = cbind(EdgeScore$ContextA_cDS$cDS_1,EdgeScore$ContextB_cDS$cDS_1),
-                                     FeatureMatrix_cDS_D2 = cbind(EdgeScore$ContextA_cDS$cDS_2,EdgeScore$ContextB_cDS$cDS_2),
-                                     nodes = NULL,
-                                     cutHeight = RandHeight)
-
-  XXX = getEdgeDviersity_ds_cds_raw(net = net,
-                                    FeatureMatrix_DS = cbind(EdgeScore$GontextA_cDS$DS,EdgeScore$GontextB_cDS$DS),
-                                    FeatureMatrix_cDS_D1 = cbind(EdgeScore$GontextA_cDS$cDS_1,EdgeScore$GontextB_cDS$cDS_1),
-                                    FeatureMatrix_cDS_D2 = cbind(EdgeScore$GontextA_cDS$cDS_2,EdgeScore$GontextB_cDS$cDS_2),
-                                    nodes = NULL,
-                                    cutHeight = RandHeight)
-
-
-  Zscore.KLD = ZscoreFit.KLD$cal_Zscore_Pvalue(RawScore = RawScore$Raw.KLD.p,
-                                               Dsize = RawScore$NodeDiversity,ParmetersInput = ZscoreFit.KLD$ParmetersInput)
-  Zscore.KLD = addLabel2Colnames(Zscore.KLD,'.KLD')
-  Zscore.cKLD = ZscoreFit.cKLD$cal_Zscore_Pvalue(RawScore = RawScore$Raw.cKLD.p,
-                                                 Dsize = RawScore$NodeDiversity,ParmetersInput = ZscoreFit.cKLD$ParmetersInput)
-  Zscore.cKLD = addLabel2Colnames(Zscore.cKLD,'.cKLD')
-  Zscore.OR = ZscoreFit.cKLDorKLD$cal_Zscore_Pvalue(RawScore = RawScore$Raw.OR.p,
-                                                    Dsize = RawScore$NodeDiversity,ParmetersInput = ZscoreFit.cKLDorKLD$ParmetersInput)
-  Zscore.OR = addLabel2Colnames(Zscore.OR,'.OR')
-
-  # Zscore.KLD = ZscoreFit.KLD$cal_Zscore_Pvalue(RawScore = RawScore$Raw.KLD.f,
-  #                                              Dsize = RawScore$Degree,ParmetersInput = ZscoreFit.KLD$ParmetersInput)
-  # Zscore.KLD = addLabel2Colnames(Zscore.KLD,'.KLD')
-  # Zscore.cKLD = ZscoreFit.cKLD$cal_Zscore_Pvalue(RawScore = RawScore$Raw.cKLD.f,
-  #                                                Dsize = RawScore$Degree,ParmetersInput = ZscoreFit.cKLD$ParmetersInput)
-  # Zscore.cKLD = addLabel2Colnames(Zscore.cKLD,'.cKLD')
-  # Zscore.OR = ZscoreFit.cKLDorKLD$cal_Zscore_Pvalue(RawScore = RawScore$Raw.OR.f,
-  #                                                   Dsize = RawScore$Degree,ParmetersInput = ZscoreFit.cKLDorKLD$ParmetersInput)
-  # Zscore.OR = addLabel2Colnames(Zscore.OR,'.OR')
-  Zscore = cbind(RawScore[,1:3],Zscore.KLD,Zscore.cKLD,Zscore.OR)
-  Zscore
-  # fit_poly(log10(Zscore$NodeDiversity),Zscore$Zscores.KLD)$p|fit_poly(log10(Zscore$NodeDiversity),Zscore$Zscores.cKLD)$p|
-  #   fit_poly(log10(Zscore$NodeDiversity),Zscore$Zscores.OR)$p
-}
+# combineEdgeScore<-function(EdgeScore,NEAModel){
+#   addLabel2Colnames <-function(x,label,sep = ''){
+#     colnames(x) = paste(colnames(x),label,sep = sep)
+#     x
+#   }
+#   AdModelList_1 = NEAModel$ad.dropModel$AdModelList_1
+#   AdModelList_2 = NEAModel$ad.dropModel$AdModelList_2
+#   RandHeight = NEAModel$RandHeight$RandHeight
+#   ZscoreFit.KLD = NEAModel_ttt$ZscoreFit.KLD
+#   ZscoreFit.cKLD = NEAModel_ttt$ZscoreFit.cKLD
+#   ZscoreFit.cKLDorKLD = NEAModel_ttt$ZscoreFit.cKLDorKLD
+#   net = EdgeScore$Network
+#   net = adjustNetScore(net = net,
+#                        AdModelList_1 = AdModelList_1,
+#                        AdModelList_2 = AdModelList_2)
+#   net$cKLDorKLD.ad.chiSquare_1 = pmax(net$KLD.ad.chiSquare,net$cKLD_1.ad.chiSquare)
+#   net$cKLDorKLD.ad.chiSquare_2 = pmax(net$KLD.ad.chiSquare,net$cKLD_2.ad.chiSquare)
+#
+#   RawScore = getEdgeDviersity_ds_cds(net = net,
+#                                      FeatureMatrix_DS = cbind(EdgeScore$ContextA_cDS$DS,EdgeScore$ContextB_cDS$DS),
+#                                      FeatureMatrix_cDS_D1 = cbind(EdgeScore$ContextA_cDS$cDS_1,EdgeScore$ContextB_cDS$cDS_1),
+#                                      FeatureMatrix_cDS_D2 = cbind(EdgeScore$ContextA_cDS$cDS_2,EdgeScore$ContextB_cDS$cDS_2),
+#                                      nodes = NULL,
+#                                      cutHeight = RandHeight)
+#
+#   XXX = getEdgeDviersity_ds_cds_raw(net = net,
+#                                     FeatureMatrix_DS = cbind(EdgeScore$GontextA_cDS$DS,EdgeScore$GontextB_cDS$DS),
+#                                     FeatureMatrix_cDS_D1 = cbind(EdgeScore$GontextA_cDS$cDS_1,EdgeScore$GontextB_cDS$cDS_1),
+#                                     FeatureMatrix_cDS_D2 = cbind(EdgeScore$GontextA_cDS$cDS_2,EdgeScore$GontextB_cDS$cDS_2),
+#                                     nodes = NULL,
+#                                     cutHeight = RandHeight)
+#
+#
+#   Zscore.KLD = ZscoreFit.KLD$cal_Zscore_Pvalue(RawScore = RawScore$Raw.KLD.p,
+#                                                Dsize = RawScore$NodeDiversity,ParmetersInput = ZscoreFit.KLD$ParmetersInput)
+#   Zscore.KLD = addLabel2Colnames(Zscore.KLD,'.KLD')
+#   Zscore.cKLD = ZscoreFit.cKLD$cal_Zscore_Pvalue(RawScore = RawScore$Raw.cKLD.p,
+#                                                  Dsize = RawScore$NodeDiversity,ParmetersInput = ZscoreFit.cKLD$ParmetersInput)
+#   Zscore.cKLD = addLabel2Colnames(Zscore.cKLD,'.cKLD')
+#   Zscore.OR = ZscoreFit.cKLDorKLD$cal_Zscore_Pvalue(RawScore = RawScore$Raw.OR.p,
+#                                                     Dsize = RawScore$NodeDiversity,ParmetersInput = ZscoreFit.cKLDorKLD$ParmetersInput)
+#   Zscore.OR = addLabel2Colnames(Zscore.OR,'.OR')
+#
+#   Zscore = cbind(RawScore[,1:3],Zscore.KLD,Zscore.cKLD,Zscore.OR)
+#   Zscore
+#
+# }
+#
 
 
 
 
-
-
-getCutHeightWithDensityFeature<-function(DS1,DS2){
-  CbindDS = cbind(DS1,DS2)
-  sampeID = sample(nrow(CbindDS),size = 1000)
-  RandDist = dist(t(scale(t(CbindDS[sampeID,]))))
-  Randhc = hclust(RandDist)
-  randCluster = data.frame(Type = 'RandEDGE',height=seq(0,max(RandDist),max(RandDist)/200),
-                           ratio = sapply(seq(0,max(RandDist),max(RandDist)/200),
-                                          function(x)cutree(Randhc,h=x)%>%unique()%>%length()/length(Randhc$order)))
-  RandHeight = max(randCluster$height[randCluster$ratio>=0.9])
-  # ggplot(randCluster,aes(height,ratio))+geom_line(color='green')+
-  # geom_hline(yintercept = min(randCluster$ratio[randCluster$ratio>=0.9]),colour='grey50',lty=2)+
-  # geom_vline(xintercept = RandHeight,colour='grey50',lty=2)+theme_cowplot_i()+xlab('cutting height')
-  RandHeight
-}
-
-
-
-getCutHeightWithDensityCombine<-function(DS1,DS2,cDS_C1_D1,cDS_C1_D2,cDS_C2_D1,cDS_C2_D2){
-  CbindDS = cbind(DS1,DS2)
-  CbindcDS_D1 = cbind(cDS_C1_D1,cDS_C2_D1)
-  CbindcDS_D2 = cbind(cDS_C1_D2,cDS_C2_D2)
-  sampeID = sample(nrow(CbindDS),size = min(c(1000,nrow(DS1))))
-  RandDist = dist(t(scale(t(CbindDS[sampeID,]))))+dist(t(scale(t(CbindcDS_D1[sampeID,]))))+dist(t(scale(t(CbindcDS_D2[sampeID,]))))
-  RandDist = RandDist/3
-  Randhc = hclust(RandDist)
-  randCluster = data.frame(Type = 'RandEDGE',height=seq(0,max(RandDist),max(RandDist)/200),
-                           ratio = sapply(seq(0,max(RandDist),max(RandDist)/200),
-                                          function(x)cutree(Randhc,h=x)%>%unique()%>%length()/length(Randhc$order)))
-  RandHeight = max(randCluster$height[randCluster$ratio>=0.9])
-  p<-ggplot(randCluster,aes(height,ratio))+geom_line(color='green')+
-    geom_hline(yintercept = min(randCluster$ratio[randCluster$ratio>=0.9]),colour='grey50',lty=2)+
-    geom_vline(xintercept = RandHeight,colour='grey50',lty=2)+theme_cowplot_i()+xlab('cutting height')
-  return(list(RandHeight=RandHeight,p=p))
-}
 
 
 ZscoreAD<-function(RawScore,
@@ -1085,7 +775,7 @@ getKLD_cKLDnetwork_fromDS<-function(RawDS_1,
                                           min.density =k/((k)^2*pi)*(n.grid^2/n.coarse^2))
       ContextA_R$cDS=NoNoiseCDS$cDSList_1
       ContextB_R$cDS=NoNoiseCDS$cDSList_2
-      # 重新计算DREMI
+      # DREMI
       Network[,paste('DREMI_1',uniCase[1],sep = '_')] = MI_from_ked2d_v(x = ContextA_R$cDS$cDS_1,logbase = 2,nx = n.coarse)
       Network[,paste('DREMI_2',uniCase[1],sep = '_')] = MI_from_ked2d_v(x = ContextA_R$cDS$cDS_2,logbase = 2,nx = n.coarse)
       Network[,paste('DREMI_1',uniCase[2],sep = '_')] = MI_from_ked2d_v(x = ContextB_R$cDS$cDS_1,logbase = 2,nx = n.coarse)
@@ -1217,61 +907,61 @@ DensityPlot_raster<-function(z,
 
 
 
-DensityPlot_raster <- function(z,
-         nrow=NULL,
-         ncolor=100,
-         addSideBar = TRUE,
-         transpose=FALSE,
-         colors= c('black','red','yellow','white'),
-         interpolate=FALSE,
-         pt.color='black',
-         pt.alpha=1,
-         pt.size=0.1){
-  if(is.vector(z)){
-    if(is.null(nrow)){
-      z = matrix(z,nrow = sqrt(length(z)))
-    }else{
-      z = matrix(z,nrow = nrow)
-    }
-  }
-  if(transpose){
-    z = t(z)
-  }
-  grid = expand.grid(1:nrow(z),1:ncol(z))
-  Pdata = data.frame(gridx = grid[,1],gridy=grid[,2],z = matrix(z,ncol = 1))
-  #Pdata_line = data.frame(x=1:nrow(z),y=apply(z, 1,which.max)%>%as.vector(),stringsAsFactors = F)
-  if(!addSideBar){
-    ggplot() +
-      geom_raster(mapping = aes(gridx , gridy,fill = z), data = Pdata,interpolate = interpolate)+
-      scale_fill_gradientn(colours = colorRampPalette(colors, interpolate = c("linear"))(ncolor),
-                           breaks=c(range(z)),labels=c('low','high'))+  labs(fill='density')+
-      geom_point(data = Pdata,mapping = aes(gridx,gridy),color=pt.color,alpha=pt.alpha,size=pt.size)+
-      theme_cowplot_i()+AddBox()+xlab('G1')+ylab('G2')+AddBox()#+guides(fill=guide_legend(title="density"))
-  }else{
-    rightSideBar = data.frame(x=0,y=1:ncol(z),z=colSums(z))
-    topSideBar = data.frame(x=1:nrow(z),y=0,z=rowSums(z))
-    ggplot() +
-      geom_raster(mapping = aes(gridx , gridy,fill = z), data = Pdata,interpolate = interpolate)+
-      scale_fill_gradientn(colours = colorRampPalette(colors, interpolate = c("linear"))(ncolor),
-                           breaks=c(range(z)),labels=c('low','high'))+ labs(fill='density')+
-      geom_point(data = Pdata,mapping = aes(gridx,gridy),color=pt.color,alpha=pt.alpha,size=pt.size)+#guides(fill=guide_legend(title="density"))+
-      theme_cowplot_i()+NoAxes2(keep.axis.title =  T)+xlab('G1')+ylab('G2')+
-      ggnewscale::new_scale_fill()+ # right
-      geom_raster(data = rightSideBar,mapping = aes(x,y,fill=z),interpolate=T)+
-      geom_rect(data = data.frame(x=0,y=0),mapping = aes(xmin = x - 0.5, xmax = x + 0.5, ymin = y+0.5, ymax = nrow(z)+0.5),
-                fill='transparent',color='grey50')+
-      scale_fill_gradientn(colours = colorRampPalette(colors, interpolate = c("linear"))(ncolor))+guides(fill='none')+
-      ggnewscale::new_scale_fill()+ # top
-      geom_raster(data = topSideBar,mapping = aes(x,y,fill=z),interpolate=T)+
-      geom_rect(data = data.frame(x=0,y=0),mapping = aes(xmin = x +0.5, xmax = nrow(z)+0.5, ymin = y-0.5, ymax = y+0.5),
-                fill='transparent',color='grey50')+
-      scale_fill_gradientn(colours = colorRampPalette(colors, interpolate = c("linear"))(ncolor))+guides(fill='none')+
-      geom_rect(data = data.frame(x=0.5,y=0.5),mapping = aes(xmin = x , xmax = nrow(z)+0.5, ymin = y, ymax =  nrow(z)+0.5),
-                fill='transparent',color='grey30')
-  }
-
-
-}
+# DensityPlot_raster <- function(z,
+#          nrow=NULL,
+#          ncolor=100,
+#          addSideBar = TRUE,
+#          transpose=FALSE,
+#          colors= c('black','red','yellow','white'),
+#          interpolate=FALSE,
+#          pt.color='black',
+#          pt.alpha=1,
+#          pt.size=0.1){
+#   if(is.vector(z)){
+#     if(is.null(nrow)){
+#       z = matrix(z,nrow = sqrt(length(z)))
+#     }else{
+#       z = matrix(z,nrow = nrow)
+#     }
+#   }
+#   if(transpose){
+#     z = t(z)
+#   }
+#   grid = expand.grid(1:nrow(z),1:ncol(z))
+#   Pdata = data.frame(gridx = grid[,1],gridy=grid[,2],z = matrix(z,ncol = 1))
+#   #Pdata_line = data.frame(x=1:nrow(z),y=apply(z, 1,which.max)%>%as.vector(),stringsAsFactors = F)
+#   if(!addSideBar){
+#     ggplot() +
+#       geom_raster(mapping = aes(gridx , gridy,fill = z), data = Pdata,interpolate = interpolate)+
+#       scale_fill_gradientn(colours = colorRampPalette(colors, interpolate = c("linear"))(ncolor),
+#                            breaks=c(range(z)),labels=c('low','high'))+  labs(fill='density')+
+#       geom_point(data = Pdata,mapping = aes(gridx,gridy),color=pt.color,alpha=pt.alpha,size=pt.size)+
+#       theme_cowplot_i()+AddBox()+xlab('G1')+ylab('G2')+AddBox()#+guides(fill=guide_legend(title="density"))
+#   }else{
+#     rightSideBar = data.frame(x=0,y=1:ncol(z),z=colSums(z))
+#     topSideBar = data.frame(x=1:nrow(z),y=0,z=rowSums(z))
+#     ggplot() +
+#       geom_raster(mapping = aes(gridx , gridy,fill = z), data = Pdata,interpolate = interpolate)+
+#       scale_fill_gradientn(colours = colorRampPalette(colors, interpolate = c("linear"))(ncolor),
+#                            breaks=c(range(z)),labels=c('low','high'))+ labs(fill='density')+
+#       geom_point(data = Pdata,mapping = aes(gridx,gridy),color=pt.color,alpha=pt.alpha,size=pt.size)+#guides(fill=guide_legend(title="density"))+
+#       theme_cowplot_i()+NoAxes2(keep.axis.title =  T)+xlab('G1')+ylab('G2')+
+#       ggnewscale::new_scale_fill()+ # right
+#       geom_raster(data = rightSideBar,mapping = aes(x,y,fill=z),interpolate=T)+
+#       geom_rect(data = data.frame(x=0,y=0),mapping = aes(xmin = x - 0.5, xmax = x + 0.5, ymin = y+0.5, ymax = nrow(z)+0.5),
+#                 fill='transparent',color='grey50')+
+#       scale_fill_gradientn(colours = colorRampPalette(colors, interpolate = c("linear"))(ncolor))+guides(fill='none')+
+#       ggnewscale::new_scale_fill()+ # top
+#       geom_raster(data = topSideBar,mapping = aes(x,y,fill=z),interpolate=T)+
+#       geom_rect(data = data.frame(x=0,y=0),mapping = aes(xmin = x +0.5, xmax = nrow(z)+0.5, ymin = y-0.5, ymax = y+0.5),
+#                 fill='transparent',color='grey50')+
+#       scale_fill_gradientn(colours = colorRampPalette(colors, interpolate = c("linear"))(ncolor))+guides(fill='none')+
+#       geom_rect(data = data.frame(x=0.5,y=0.5),mapping = aes(xmin = x , xmax = nrow(z)+0.5, ymin = y, ymax =  nrow(z)+0.5),
+#                 fill='transparent',color='grey30')
+#   }
+#
+#
+# }
 #' sea_fit_fix
 #'
 #' @param Dsize
@@ -1284,7 +974,7 @@ DensityPlot_raster <- function(z,
 #' @param mean_1
 #'
 #' @return
-#' @export
+#' @keywords internal
 #'
 #' @examples
 sea_fit_fix<-function(Dsize,RawScores,Dstd = NULL,
@@ -1345,13 +1035,13 @@ sea_fit_fix<-function(Dsize,RawScores,Dstd = NULL,
   resultSDPa=minpack.lm::nlsLM(StdM~fsd(MeaS,a,b),
                                data=Meandata,start =
                                  list(a= as.numeric(coef(inital_coef)[2]),b=3.36))
-  for (i in 1:150){# 多迭代几次
+  for (i in 1:150){#
     resultSDPa=minpack.lm::nlsLM(StdM~fsd(MeaS,a,b), data=Meandata,start = coef(resultSDPa))
   }
 
   resultSDPa=minpack.lm::nlsLM(StdM~fsd(MeaS,a,b),
                                data=Meandata,
-                               start = coef(resultSDPa)) # 如果未出现warning 说明差不多
+                               start = coef(resultSDPa)) #
   summary(resultSDPa)
 
   # size ~ mean fitting
@@ -1366,7 +1056,7 @@ sea_fit_fix<-function(Dsize,RawScores,Dstd = NULL,
 
   resultMePa=minpack.lm::nlsLM(MeaM~fmean(MeaS,a,b),
                                data=Meandata,
-                               start = coef(resultMePa)) # 如果未出现warning 说明差不多
+                               start = coef(resultMePa)) #
   summary(resultMePa)
 
   ## plot fit @@@@@@
@@ -1394,17 +1084,11 @@ sea_fit_fix<-function(Dsize,RawScores,Dstd = NULL,
   # Skewed distribution fitting
   ZsDistribution <- sn::selm(Zscore ~ 1, family = "SN",data = Inputdata)
   # coef(ZsDistribution)
-  ParmetersZsD = ZsDistribution@param$dp %>%as.numeric() # 分布的系数
-  #Pa = ParmetersZsD
-  # Pvalue<- 1-sn::psn(seq(-1,1,0.1),
-  #                xi=ParmetersZsD[1],
-  #                omega=ParmetersZsD[2],
-                 # alpha=ParmetersZsD[3]) #计算
-  # plot
+  ParmetersZsD = ZsDistribution@param$dp %>%as.numeric() #
   p3<-ggplot(data = Inputdata, aes(Zscore)) + # geom_line()
     geom_histogram(mapping = aes(y = after_stat(density)),colour = "white", fill = "black",bins = 50) +
     stat_function(fun = sn::dsn, args = list(omega = ParmetersZsD[2], alpha = ParmetersZsD[3] , xi = ParmetersZsD[1]),col = "red",size = 2)+
-    theme_cowplot_i() +AddBox()+ggtitle('Z scores')# y = ..density.. 不能在ggplot被调用只能在geom_histogram
+    theme_cowplot_i() +AddBox()+ggtitle('Z scores')# y = ..density..
 
 
   ParmetersInput = list(Meanfit = resultMePa,
@@ -1430,7 +1114,7 @@ sea_fit_fix<-function(Dsize,RawScores,Dstd = NULL,
 #' @param mean_1
 #'
 #' @return
-#' @export
+#' @keywords internal
 #'
 #' @examples
 sea_fit_fix_st<-function(Dsize,RawScores,Dstd = NULL,
@@ -1494,13 +1178,13 @@ sea_fit_fix_st<-function(Dsize,RawScores,Dstd = NULL,
   resultSDPa=minpack.lm::nlsLM(StdM~fsd(MeaS,a,b),
                                data=Meandata,start =
                                  list(a= as.numeric(coef(inital_coef)[2]),b=1))
-  for (i in 1:150){# 多迭代几次
+  for (i in 1:150){#
     resultSDPa=minpack.lm::nlsLM(StdM~fsd(MeaS,a,b), data=Meandata,start = coef(resultSDPa))
   }
 
   resultSDPa=minpack.lm::nlsLM(StdM~fsd(MeaS,a,b),
                                data=Meandata,
-                               start = coef(resultSDPa)) # 如果未出现warning 说明差不多
+                               start = coef(resultSDPa)) #
   summary(resultSDPa)
 
   # size ~ mean fitting
@@ -1515,7 +1199,7 @@ sea_fit_fix_st<-function(Dsize,RawScores,Dstd = NULL,
 
   resultMePa=minpack.lm::nlsLM(MeaM~fmean(MeaS,a,b),
                                data=Meandata,
-                               start = coef(resultMePa)) # 如果未出现warning 说明差不多
+                               start = coef(resultMePa)) #
   summary(resultMePa)
 
   ## plot fit @@@@@@
@@ -1543,18 +1227,18 @@ sea_fit_fix_st<-function(Dsize,RawScores,Dstd = NULL,
   # Skewed distribution fitting
   fit0 <- sn::selm(Zscore ~ 1, data = Inputdata, family="SN")
   dp0  <- coef(fit0, param.type="DP")
-  # 给一个中等的自由度起始值 nu = 5
+  #
   start0 <- c(dp0, nu = 3)
   ZsDistribution <- sn::selm(Zscore ~ 1, family = "ST",
                              data = Inputdata,start = start0)
   # ZsDistribution <- sn::selm(Zscore ~ 1, family = "ST",data = Inputdata)
   # coef(ZsDistribution)
-  ParmetersZsD = ZsDistribution@param$dp %>%as.numeric() # 分布的系数
+  ParmetersZsD = ZsDistribution@param$dp %>%as.numeric() #
   #Pa = ParmetersZsD
   # Pvalue<- 1-sn::psn(seq(-1,1,0.1),
   #                    xi=ParmetersZsD[1],
   #                    omega=ParmetersZsD[2],
-  #                    alpha=ParmetersZsD[3]) #计算
+  #                    alpha=ParmetersZsD[3]) #
   # plot
   p3<-ggplot(data = Inputdata, aes(Zscore)) + # geom_line()
     geom_histogram(mapping = aes(y = after_stat(density)),colour = "white", fill = "black",bins = 50) +
@@ -1562,7 +1246,7 @@ sea_fit_fix_st<-function(Dsize,RawScores,Dstd = NULL,
                                              alpha = ParmetersZsD[3] ,
                                              xi = ParmetersZsD[1],
                                              nu=ParmetersZsD[4]),col = "red",size = 2)+
-    theme_cowplot_i() +AddBox()+ggtitle('Z scores')# y = ..density.. 不能在ggplot被调用只能在geom_histogram
+    theme_cowplot_i() +AddBox()+ggtitle('Z scores')# y = ..density..
 
 
   ParmetersInput = list(Meanfit = resultMePa,
@@ -1580,21 +1264,21 @@ fit_selm_distrubution <- function(x){
   cal_Pvalue<-function(x,ParmetersInput){
     Pvalues <-  1-sn::psn(x,xi=ParmetersInput[1],
                     omega=ParmetersInput[2],
-                    alpha=ParmetersInput[3]) #计算
+                    alpha=ParmetersInput[3]) #
     Pvalues2 <-  sn::dsn(x,xi=ParmetersInput[1],
                    omega=ParmetersInput[2],
-                   alpha=ParmetersInput[3]) #计算
+                   alpha=ParmetersInput[3]) #
     Pvalues[Pvalues==0] = Pvalues2[Pvalues==0]
     data.frame(x = x,Pvalues = Pvalues)
   }
   Inputdata <- data.frame(Zscore=x)
   ZsDistribution <- sn::selm(Zscore ~ 1, family = "SN",
                          data = Inputdata)
-  ParmetersZsD = ZsDistribution@param$dp %>%as.numeric() # 分布的系数
+  ParmetersZsD = ZsDistribution@param$dp %>%as.numeric() #
   p<-ggplot(data = Inputdata, aes(Zscore)) + # geom_line()
     geom_histogram(mapping = aes(y = after_stat(density)),colour = "white", fill = "black",bins = 50) +
     stat_function(fun = sn::dsn, args = list(omega = ParmetersZsD[2], alpha = ParmetersZsD[3] , xi = ParmetersZsD[1]),col = "red",size = 2)+
-    theme_cowplot_i() +AddBox()+ggtitle('Z scores')# y = ..density.. 不能在ggplot被调用只能在geom_histogram
+    theme_cowplot_i() +AddBox()+ggtitle('Z scores')# y = ..density..
   return(list(cal_Pvalue=cal_Pvalue,
               ParmetersInput=ParmetersZsD,
               reslutP=p))
@@ -1606,27 +1290,27 @@ fit_selm_distrubution_ST <- function(x){
     Pvalues <-  1-sn::pst(x,xi=ParmetersInput[1],
                           omega=ParmetersInput[2],
                           alpha=ParmetersInput[3],
-                          nu =ParmetersInput[4] ) #计算
+                          nu =ParmetersInput[4] ) #
     Pvalues2 <-  sn::dst(x,xi=ParmetersInput[1],
                          omega=ParmetersInput[2],
                          alpha=ParmetersInput[3],
-                         nu =ParmetersInput[4] ) #计算
+                         nu =ParmetersInput[4] ) #
     Pvalues[Pvalues==0] = Pvalues2[Pvalues==0]
     data.frame(x = x,Pvalues = Pvalues)
   }
   Inputdata <- data.frame(Zscore=x)
   fit0 <- sn::selm(Zscore ~ 1, data = Inputdata, family="SN")
   dp0  <- coef(fit0, param.type="DP")
-  # 给一个中等的自由度起始值 nu = 5
+  #
   start0 <- c(dp0, nu = 3)
   ZsDistribution <- sn::selm(Zscore ~ 1, family = "ST",
                              data = Inputdata,start = start0)
-  ParmetersZsD = ZsDistribution@param$dp %>%as.numeric() # 分布的系数
+  ParmetersZsD = ZsDistribution@param$dp %>%as.numeric() #
   p<-ggplot(data = Inputdata, aes(Zscore)) + # geom_line()
     geom_histogram(mapping = aes(y = after_stat(density)),colour = "white", fill = "black",bins = 50) +
     stat_function(fun = sn::dst, args = list(omega = ParmetersZsD[2], alpha = ParmetersZsD[3] ,
                                              xi = ParmetersZsD[1],nu=ParmetersZsD[4]),col = "red",size = 2)+
-    theme_cowplot_i() +AddBox()+ggtitle('Z scores')# y = ..density.. 不能在ggplot被调用只能在geom_histogram
+    theme_cowplot_i() +AddBox()+ggtitle('Z scores')# y = ..density..
   return(list(cal_Pvalue=cal_Pvalue,
               ParmetersInput=ParmetersZsD,
               reslutP=p))
@@ -1668,7 +1352,7 @@ MeanSD_By_slidingWindows <- function(ranks,
 }
 
 detect_outliers_iqr <- function(x, coef = 1.5) {
-  # 只对数值部分计算，忽略 NA
+  #
   x_num <- x[!is.na(x)]
 
   Q1   <- quantile(x_num, 0.25, names = FALSE)
@@ -1678,7 +1362,7 @@ detect_outliers_iqr <- function(x, coef = 1.5) {
   lower <- Q1 - coef * IQRv
   upper <- Q3 + coef * IQRv
 
-  # 找出所有离群点的位置（相对于原始向量）
+  #
   is_outlier <- (x < lower) | (x > upper)
   out_idx    <- is_outlier & !is.na(is_outlier)
   out_vals   <- x[out_idx]

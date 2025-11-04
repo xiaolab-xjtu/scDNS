@@ -31,11 +31,15 @@ Depends:
     data.table,
     BiocGenerics,
     magrittr,
+    stringr,
     ggplot2,
+    mixtools,
     R (>= 2.10),
     BiocParallel,
     foreach,
-    Seurat
+    Seurat,
+    ggpmisc,
+    ghyp
 RoxygenNote: 7.1.2
 URL: https://github.com/HChaoLab/scDNS
 BugReports: https://github.com/HChaoLab/scDNS/issues

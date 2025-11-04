@@ -1,3 +1,44 @@
+#' filterNetowrkFromGAT
+#'
+#' @param scDNSob scDNSob
+#' @param GAT_outNet
+#'
+#' @return scDNSob
+#' @export
+#'
+#' @examples
+filterNetowrkFromGAT <- function(scDNSob,GAT_outNet='./data/attention_layer1_epoch1000_wide_confidence.csv'){
+  message('raw network will be sorted in scDNSob@Other$Network')
+  scDNSob@Other$Network <- scDNSob@Network
+  GATNet <- read.csv(GAT_outNet)
+  NetworkLabel <- scDNSob@Network
+
+  Hcon_index <- paste(NetworkLabel[,1],NetworkLabel[,2],sep = '_')%in%GATNet$edge[GATNet$confidence =='High_confidence']
+  scDNSob@Network <- scDNSob@Network[Hcon_index,]
+  scDNSob
+}
+
+#' filterNetowrkFromDREMI
+#'
+#' @param scDNSob scDNSob
+#' @param rmP the threshold of significance(def:0.01)
+#'
+#' @return
+#' @export
+#'
+#' @examples
+filterNetowrkFromDREMI <- function(scDNSob,rmP=0.01){
+  message('raw network will be sorted in scDNSob@Other$Network')
+  scDNSob@Other$Network <- scDNSob@Network
+  DRMEI_th <- quantile(scDNSob@NEAModel$RandDistrubution$DegreeData[,
+                                                                    stringr::str_detect(colnames(GEM_PANC1_scDNSob@NEAModel$RandDistrubution$DegreeData),
+                                                                               pattern = 'DREMI')]%>%as.matrix(),1-rmP)
+  maxDREMI <- MatrixGenerics::rowMaxs(scDNSob@Network[,stringr::str_detect(colnames(GEM_PANC1_scDNSob@Network),pattern = 'DREMI')]%>%as.matrix())
+  message('Non-significant interactions (based on DREMI) are removed from the network.')
+  message(sum(maxDREMI<DRMEI_th))
+  scDNSob@Network <- scDNSob@Network[maxDREMI>=DRMEI_th,]
+  scDNSob
+}
 #' getZscore
 #'
 #' @param EdgeScore a list or dataframe from getKLD_cKLDnetwork
@@ -185,30 +226,19 @@ getRawScore.Mpl<-function(net,Div,cDiv_D1,cDiv_D2){
   Rawdata
 }
 
-ad.NetRScore3 <- function(netScore,DivFit,cDivFit){
-  Pchi.Div=toChiSquareX(netScore$Div,netScore$npoint_ds,DivFit)
-  Pchi.cDiv_D1=toChiSquareX(netScore$cDiv_D1,netScore$npoint_ds,cDivFit)
-  Pchi.cDiv_D2=toChiSquareX(netScore$cDiv_D2,netScore$npoint_ds,cDivFit)
-  Pchi.Div = addLabel2Colnames(Pchi.Div,label = 'Div.',before = TRUE)
-  Pchi.cDiv_D1 = addLabel2Colnames(Pchi.cDiv_D1,label = 'cDiv_D1.',before = TRUE)
-  Pchi.cDiv_D2 = addLabel2Colnames(Pchi.cDiv_D2,label = 'cDiv_D2.',before = TRUE)
-  Pchi = cbind(Pchi.Div,Pchi.cDiv_D1,Pchi.cDiv_D2)
-  netScore[,colnames(Pchi)] <- Pchi
-  netScore
-}
 
-toChiSquareX <- function(rs,bias,DistrbutionList){
-  Pvalues <-  rs
-  uniBias <- unique(bias)
-  Num_Model <- names(DistrbutionList)
-  for(i in 1:length(uniBias)){
-    ind=getCloseseData(data = as.numeric(Num_Model),uniBias[i],returnIndex = T)
-    Pvalues[bias==uniBias[i]] = DistrbutionList[[ind]]$cal_Pvalue(rs[bias==uniBias[i]],
-                                                                  ParmetersInput = DistrbutionList[[ind]]$ParmetersInput)$Pvalues
-  }
-
-  Pvalues[Pvalues==0]=1e-312
-  chiSquare = sqrt(-log10(Pvalues))
-  data.frame(Pvalues=Pvalues,chiSquare=chiSquare)
-}
+# toChiSquareX <- function(rs,bias,DistrbutionList){
+#   Pvalues <-  rs
+#   uniBias <- unique(bias)
+#   Num_Model <- names(DistrbutionList)
+#   for(i in 1:length(uniBias)){
+#     ind=getCloseseData(data = as.numeric(Num_Model),uniBias[i],returnIndex = T)
+#     Pvalues[bias==uniBias[i]] = DistrbutionList[[ind]]$cal_Pvalue(rs[bias==uniBias[i]],
+#                                                                   ParmetersInput = DistrbutionList[[ind]]$ParmetersInput)$Pvalues
+#   }
+#
+#   Pvalues[Pvalues==0]=1e-312
+#   chiSquare = sqrt(-log10(Pvalues))
+#   data.frame(Pvalues=Pvalues,chiSquare=chiSquare)
+# }
 

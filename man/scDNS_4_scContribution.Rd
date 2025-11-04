@@ -6,7 +6,8 @@
 \usage{
 scDNS_4_scContribution(
   scDNSobject,
-  topGene = 100,
+  topGene = NULL,
+  Zscore_col = "combined_z",
   sigGene = NULL,
   q.th = 0.01,
   ...
@@ -15,7 +16,8 @@ scDNS_4_scContribution(
 \arguments{
 \item{scDNSobject}{scDNSobject}
 
-\item{topGene}{Integer value, representing the number of top significant genes(def:100).When sigGene is not NULL, topGene is invalid.}
+\item{topGene}{Integer value, representing the number of top significant genes(def:100).
+When sigGene is not NULL, topGene is invalid.}
 
 \item{sigGene}{A vector of strings representing the set of genes of interest (def:NULL)}
 

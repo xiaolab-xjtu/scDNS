@@ -24,3 +24,4 @@ sea_fit_fix(
 \description{
 sea_fit_fix
 }
+\keyword{internal}

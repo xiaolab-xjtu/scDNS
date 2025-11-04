@@ -1,4 +1,4 @@
-# scDNS define class
+# scDNS  class
 scDNSobjClass <- function(){
   setClassUnion("matrixORdgCMatrix", c("matrix", "dgCMatrix"))
   setClassUnion("matrixORarray", c("matrix", "array"))
@@ -16,12 +16,52 @@ scDNSobjClass <- function(){
     JDensity_B = 'matrixORarray',
     uniCase = 'character',
     Zscore = 'data.frame',
-    scZscore = 'matrixORdgCMatrix'
+    scZscore = 'matrixORdgCMatrix',
+    Other = 'list'
   ))
 }
-
 scDNSobjClass()
-# # 创建类的方法
+
+
+seurat2scDNSObj <- function(sob, imputedAssay = "MAGIC_RNA", GroupBy = NULL, ...) {
+  # Check if GroupBy argument is provided
+  if (is.null(GroupBy)) {
+    stop("Please provide cell group information via the 'GroupBy' parameter.")
+  }
+
+  # Detect Seurat major version (4 or 5)
+
+  # Extract raw counts matrix
+  counts_mat <- Seurat::GetAssayData(sob, assay = "RNA", slot = "counts")
+
+  # Extract imputed expression matrix
+  if (imputedAssay %in% names(sob@assays)) {
+    data_mat <- Seurat::GetAssayData(sob, assay = imputedAssay, slot = "data")
+  } else {
+    stop(paste0("Assay '", imputedAssay, "' not found in the Seurat object."))
+  }
+
+  # Extract group labels from meta.data
+  if (!GroupBy %in% colnames(sob@meta.data)) {
+    stop(paste0("Column '", GroupBy, "' not found in sob@meta.data."))
+  }
+  group_label <- as.character(sob@meta.data[[GroupBy]])
+
+  # Construct scDNS object
+  scDNSob <- CreatScDNSobject(
+    counts = counts_mat,
+    data = data_mat,
+    Network = scDNSBioNet,
+    GroupLabel = group_label,
+    uniCase = unique(group_label),
+    ...
+  )
+
+  return(scDNSob)
+}
+
+
+
 setMethod("show", "scDNS",
           function(object) {
             cat("Gene expression matrix size (gene × cell):", dim(object@data), "\n")
@@ -29,18 +69,6 @@ setMethod("show", "scDNS",
             cat("Group information:", object@uniCase, "\n")
           }
 )
-
-seurat2scDNSObj <- function(sob,imputedAssay ='MAGIC_RNA',GroupBy=NULL,...){
-  if(is.null(GroupBy)){
-    stop('Please provide cell groups information.')
-  }
-  DSP_scDNSob <- CreatScDNSobject(counts = sob@assays$RNA@counts,
-                                  data = sob@assays[[imputedAssay]]@data,
-                                  Network = scDNSBioNet,
-                                  GroupLabel = sob@meta.data[,GroupBy]%>%as.character(),...)
-  DSP_scDNSob
-}
-
 
 setMethod("colnames", signature(x = "scDNS"), function(x) {
   if (!is.null(x@data)) {

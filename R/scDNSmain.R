@@ -111,7 +111,8 @@ CreatScDNSobject <- function(counts,
                      NEAModel=list(),
                      JDensity_A = matrix(),
                      JDensity_B = matrix(),
-                     uniCase = character())
+                     uniCase = character(),
+                     Other=list())
   scDNSobject
 
 
@@ -225,7 +226,7 @@ scDNS_1_CalDivs <- function(scDNSobject,
 #'
 #' @param scDNSobject scDNSobject
 #' @param n.dropGene Integer, number of cells sampled for model building (def:3000)
-#' @param n.randNet Integer, number of cells sampled for model building (def:3000)
+#' @param n.randNet Integer, number of cells sampled for model building (def:20000)
 #' @param sdBias Numeric value, bias coefficient used to penalize low degree genes(>=1) (def:1.1)
 #'
 #' @return
@@ -242,12 +243,6 @@ scDNS_2_creatNEAModel <- function(scDNSobject,
   if(!is.null(n.randNet)){scDNSobject@NEA.Parameters$n.randNet=n.randNet}
   if(!is.null(sdBias)){scDNSobject@NEA.Parameters$sdBias=sdBias}
 
-
-  # NEA.Parameters <- list(do.impute = FALSE,
-  #                        n.dropGene = n.dropGene,
-  #                        n.randNet = n.randNet,
-  #                        sdBias = sdBias)
-  # scDNSobject@NEA.Parameters <- NEA.Parameters
   NEAModel <- creatNEAModel(counts=scDNSobject@counts,
                             ExpData=scDNSobject@data,
                             do.impute = scDNSobject@NEA.Parameters$do.impute,
@@ -296,7 +291,8 @@ scDNS_3_GeneZscore <- function(scDNSobject){
 #' scDNS_4_scContribution
 #'
 #' @param scDNSobject scDNSobject
-#' @param topGene Integer value, representing the number of top significant genes(def:100).When sigGene is not NULL, topGene is invalid.
+#' @param topGene Integer value, representing the number of top significant genes(def:100).
+#' When sigGene is not NULL, topGene is invalid.
 #' @param sigGene A vector of strings representing the set of genes of interest (def:NULL)
 #' @param q.th Adjusted p-value threshold
 #'
@@ -306,20 +302,24 @@ scDNS_3_GeneZscore <- function(scDNSobject){
 #'
 #' @examples
 scDNS_4_scContribution <- function(scDNSobject,
-                                   topGene=100,
+                                   topGene=NULL,
+                                   Zscore_col = 'combined_z',
                                    sigGene=NULL,
                                    q.th=0.01,...){
-
-  if(is.null(sigGene)){
-    Zscore <- scDNSobject@Zscore
-    Zscore$Qvalue.Zsplus <- p.adjust(Zscore$Pvalues.ZsPlus,method = 'BH')
-    sigGene <- Zscore$Gene[Zscore$Qvalue.Zsplus<q.th]
-    if(length(sigGene)==0){
-      message('The number of sigGene is 0. We used top genes (100)')
-    }else{
-      message('The number of sigGene is ',length(sigGene),'.')
+  if(is.null(topGene)){
+    if(is.null(sigGene)){
+      Zscore <- scDNSobject@Zscore
+      p_adj <- p.adjust(Zscore[,Zscore_col],method = 'BH')
+      sigGene <- Zscore$Gene[p_adj<q.th]
+      if(length(sigGene)==0){
+        message('The number of sigGene is 0. We used top genes (100)')
+      }else{
+        message('The number of sigGene is ',length(sigGene),'.')
+      }
     }
   }
+
+
 
   nx <-  sqrt(ncol(scDNSobject@JDensity_A))
   # scCon_res <- scContribution(EdgeScore = scDNSobject@Network,
