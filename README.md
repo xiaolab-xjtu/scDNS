@@ -184,8 +184,8 @@ This step summarizes gene-level perturbations into **single-cell perturbation sc
 ```r
 GEM_PANC1_scDNSob <- scDNS_4_scContribution(
   GEM_PANC1_scDNSob,
-  topGene = 100,
-  InterstingGene = NULL,
+  topGene = NULL,
+  sigGene = NULL,
   q.th = 0.1
 )
 ```

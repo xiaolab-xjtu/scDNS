@@ -9,6 +9,7 @@ CreatScDNSobject(
   data = NULL,
   Network = NULL,
   GroupLabel = NULL,
+  uniCase = unique(GroupLabel),
   k = 10,
   n.grid = 60,
   NoiseRemove = TRUE,
@@ -41,6 +42,8 @@ CreatScDNSobject(
 
 \item{GroupLabel}{a string vector representing the grouping information of the cells}
 
+\item{uniCase}{unique cases of groups}
+
 \item{k}{a numerical value represents the kth (def: 10) nearest neighbor point}
 
 \item{n.grid}{An integer value representing the number of grid (def:60) used to calculate the joint probability density}
@@ -55,9 +58,9 @@ CreatScDNSobject(
 
 \item{divergence}{Method for calculating divergence, optional jsd (Jensen-Shannon divergence) and kld (Kullback–Leibler divergence)(def:jsd)}
 
-\item{h}{A parameter used for kernel density estimation, which only takes effect when the density estimation method is kde (def:1).}
+\item{noiseSd}{}
 
-\item{Div_weight}{}
+\item{h}{A parameter used for kernel density estimation, which only takes effect when the density estimation method is kde (def:1).}
 
 \item{loop.size}{An integer value representing the network size (def:3000) allocated to each compute core}
 

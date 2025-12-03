@@ -31,9 +31,9 @@ filterNetowrkFromDREMI <- function(scDNSob,rmP=0.01){
   message('raw network will be sorted in scDNSob@Other$Network')
   scDNSob@Other$Network <- scDNSob@Network
   DRMEI_th <- quantile(scDNSob@NEAModel$RandDistrubution$DegreeData[,
-                                                                    stringr::str_detect(colnames(GEM_PANC1_scDNSob@NEAModel$RandDistrubution$DegreeData),
+                                                                    stringr::str_detect(colnames(scDNSob@NEAModel$RandDistrubution$DegreeData),
                                                                                pattern = 'DREMI')]%>%as.matrix(),1-rmP)
-  maxDREMI <- MatrixGenerics::rowMaxs(scDNSob@Network[,stringr::str_detect(colnames(GEM_PANC1_scDNSob@Network),pattern = 'DREMI')]%>%as.matrix())
+  maxDREMI <- MatrixGenerics::rowMaxs(scDNSob@Network[,stringr::str_detect(colnames(scDNSob@Network),pattern = 'DREMI')]%>%as.matrix())
   message('Non-significant interactions (based on DREMI) are removed from the network.')
   message(sum(maxDREMI<DRMEI_th))
   scDNSob@Network <- scDNSob@Network[maxDREMI>=DRMEI_th,]
