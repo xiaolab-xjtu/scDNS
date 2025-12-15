@@ -270,7 +270,7 @@ densityCompare3 <- function (scDNSobject, Nodes, topEdge=10,
         scale_fill_gradientn(colours = c('transparent','darkblue'))+
         stat_function(fun = function(x){predict(STIM_fit$models[[STIM_best_name]]$fit,newdata = data.frame(x=x))},
                       color = "darkblue", size = 1,xlim = c(0, 19)) +theme_pretty()+labs(x=Gene1,y=Gene2)+NoLegend()+NoAxes2(keep.axis.title = T)+
-        ggpmisc::geom_table(data = df,
+        ggpp::geom_table(data = df,
                    aes(x = x, y = y, label = tb),size =2,table.theme = tbtheme)
       print(i)
       p

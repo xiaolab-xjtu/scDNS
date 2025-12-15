@@ -7,7 +7,7 @@
 scDNS_4_scContribution(
   scDNSobject,
   topGene = NULL,
-  Zscore_col = "combined_z",
+  Pval_col = "p_comb",
   sigGene = NULL,
   q.th = 0.01,
   ...

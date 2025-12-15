@@ -617,6 +617,16 @@ GeneInteraction <- function(scDNSobject,
 }
 
 
+#' replace2
+#'
+#' @param x
+#' @param RawData
+#' @param RepData
+#'
+#' @return
+#' @export
+#'
+#' @examples
 replace2 <- function(x,RawData,RepData){
   x=as.character(x)
   RawData=as.character(RawData)
@@ -677,4 +687,29 @@ copyRowColname <- function(pasteM,copyM){
 
 getAccByScore <- function(x){
   rank(x,ties.method = 'random')/length(x)
+}
+
+
+top_n_vector <- function(x,n,returnLogical=FALSE,na.rm=TRUE,
+         ties.method=c("average", "first", "last", "random", "max", "min")){
+  #x=c(1,5,2,3,NA,7,NA)
+  ranker=rank(x,ties.method = ties.method[1])
+  if(na.rm){
+    Maxranker = ranker[!is.na(x)]%>%max()
+  }else{
+    Maxranker = ranker%>%max()
+  }
+  if(n>0){
+    R_logical=ranker>=(max(0,Maxranker-n+1))
+  }else{
+    R_logical=ranker<=(min(Maxranker,abs(n)))
+  }
+  if(na.rm){
+    R_logical[is.na(x)] = FALSE
+  }
+  if(returnLogical){
+    return(R_logical)
+  }else{
+    return(x[R_logical])
+  }
 }

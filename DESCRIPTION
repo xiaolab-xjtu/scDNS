@@ -38,7 +38,7 @@ Depends:
     BiocParallel,
     foreach,
     Seurat,
-    ggpmisc,
+    ggpp,
     ghyp
 RoxygenNote: 7.1.2
 URL: https://github.com/HChaoLab/scDNS
